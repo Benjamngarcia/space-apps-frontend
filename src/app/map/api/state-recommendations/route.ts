@@ -21,27 +21,52 @@ export async function POST(req: Request){
 
     let summary = "Configura GOOGLE_API_KEY en .env.local para usar Gemini.";
     const key = process.env.GOOGLE_API_KEY;
+    console.log("GOOGLE_API_KEY:", key);
     if(key){
       const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `
-Eres un asistente ambiental. Usa estrictamente estos datos (AQI) para ${st.name || 'el estado'} [FIPS ${st.fips}]:
+Eres un asistente ambiental especializado en calidad del aire y salud humana. 
+Tu tarea es ayudar al usuario a realizar actividades al aire libre de forma segura, 
+considerando los niveles de contaminación atmosférica actuales del estado ${st.name || "desconocido"} [FIPS ${st.fips}].
 
-- NO2: ${st.NO2 ?? "N/D"}
-- O3 : ${st.O3 ?? "N/D"}
-- PM : ${st.PM ?? "N/D"}
-- CH2O: ${st.CH2O ?? "N/D"}
-- AI (máximo de NO2/O3/PM/CH2O): ${AI ?? "N/D"}
+### Datos de calidad del aire (AQI) actuales:
+- Dióxido de nitrógeno (NO₂): ${st.NO2 ?? "N/D"}
+- Ozono (O₃): ${st.O3 ?? "N/D"}
+- Material particulado (PM₂.₅/PM₁₀): ${st.PM ?? "N/D"}
+- Formaldehído (CH₂O): ${st.CH2O ?? "N/D"}
+- Índice global (AI, máximo de los anteriores): ${AI ?? "N/D"}
 
-Usuario: "${user_text ?? "Dame recomendaciones de actividades"}"
+### Solicitud del usuario:
+"${user_text ?? "Dame recomendaciones de actividades"}"
 
-Responde con:
-1) Riesgo general (bajo/medio/alto) y por qué.
-2) Recomendaciones por actividad (correr, bici, niños, adultos mayores).
-3) Acciones de mitigación (horarios, mascarilla, rutas menos transitadas).
-4) Si el usuario pidió algo específico, adáptalo.
-      `.trim();
+---
+
+### Instrucciones para tu respuesta:
+
+1. **Analiza el tipo de actividad** (por ejemplo: correr, caminar, andar en bici, ir de picnic, visitar un parque, etc.).  
+   Si menciona un **lugar específico** dentro del estado (como una ciudad, parque, playa o montaña), adáptate a las condiciones típicas de ese entorno.
+
+2. **Evalúa el riesgo** en función del AI:
+   - 0–50 → bueno
+   - 51–100 → moderado
+   - 101–150 → insalubre para grupos sensibles
+   - 151–200 → insalubre
+   - >200 → muy insalubre o peligroso
+
+3. **Indica claramente** si la actividad es recomendable o no, y **por cuánto tiempo máximo** puede realizarse sin riesgo (en minutos u horas), según la calidad del aire.
+
+4. **Da recomendaciones personalizadas**, incluyendo:
+   - Mejor horario para realizar la actividad.
+   - Precauciones de salud (hidratación, mascarilla, pausas, evitar zonas con tráfico, etc.).
+   - Alternativas seguras si el aire no es favorable.
+   - Mención explícita a grupos sensibles (niños, adultos mayores, asmáticos, embarazadas).
+
+5. **Termina siempre con un tono empático y de cuidado**, recordando que estas son recomendaciones basadas en la información de contaminación atmosférica y no sustituyen la orientación médica o institucional.
+
+Tu respuesta debe ser breve, clara y estructurada, con secciones numeradas o por guiones, evitando repeticiones o frases introductorias genéricas.
+`.trim();
 
       const resp = await model.generateContent(prompt);
       summary = resp.response.text();
