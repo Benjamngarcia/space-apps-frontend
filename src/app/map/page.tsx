@@ -60,16 +60,59 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { useUser } from '../../contexts/UserContext';
+
 const D3USChoropleth = dynamic(() => import('./components/D3USChoropleth'), { ssr: false });
 
 export default function Page(){
+  const { user, logout } = useUser();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
+
   return (
-    <main className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Coropleta por estado (JSON) — Máximo de NO2/O3/PM/CH2O</h1>
-      <p className="text-sm opacity-70">
-        Coloca el archivo más reciente en <code>data/uploads/</code> con nombre <b>YYYYMMDD_hhmm.json</b> y el esquema indicado.
-      </p>
-      <D3USChoropleth />
-    </main>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header with user info and logout */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <h1 className="text-xl font-semibold text-gray-900">Space Apps Dashboard</h1>
+              <div className="flex items-center space-x-4">
+                <Link
+                  href="/profile"
+                  className="text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Profile
+                </Link>
+                <span className="text-sm text-gray-700">
+                  Welcome, {user?.name} {user?.surname}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-6 space-y-6">
+          <h1 className="text-2xl font-bold">Coropleta por estado (JSON) — Máximo de NO2/O3/PM/CH2O</h1>
+          <p className="text-sm opacity-70">
+            Coloca el archivo más reciente en <code>data/uploads/</code> con nombre <b>YYYYMMDD_hhmm.json</b> y el esquema indicado.
+          </p>
+          <D3USChoropleth />
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }
