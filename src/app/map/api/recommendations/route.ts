@@ -18,9 +18,10 @@ export async function POST(req: Request){
 
     let summary = "Configura GOOGLE_API_KEY en .env.local para usar Gemini.";
     const key = process.env.GOOGLE_API_KEY;
+    console.log("GOOGLE_API_KEY:", key);
     if(key){
       const genAI = new GoogleGenerativeAI(key);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const prompt = `
 Eres un asistente ambiental. Usa estrictamente estos valores (AQI) para ZIP ${zip}:
 - NO2: ${NO2 ?? "N/D"}
