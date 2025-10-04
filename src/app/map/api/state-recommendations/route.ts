@@ -27,11 +27,9 @@ export async function POST(req: Request){
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const prompt = `
-Eres un asistente ambiental especializado en calidad del aire y salud humana. 
-Tu tarea es ayudar al usuario a realizar actividades al aire libre de forma segura, 
-considerando los niveles de contaminación atmosférica actuales del estado ${st.name || "desconocido"} [FIPS ${st.fips}].
+Eres un asistente experto en salud ambiental, especializado en calidad del aire y su impacto en las actividades al aire libre. Tu objetivo es proporcionar recomendaciones detalladas y personalizadas al usuario, basándote en los datos de calidad del aire proporcionados.
 
-### Datos de calidad del aire (AQI) actuales:
+### Datos de calidad del aire (AQI) actuales del estado de ${st.name}:
 - Dióxido de nitrógeno (NO₂): ${st.NO2 ?? "N/D"}
 - Ozono (O₃): ${st.O3 ?? "N/D"}
 - Material particulado (PM₂.₅/PM₁₀): ${st.PM ?? "N/D"}
@@ -39,33 +37,26 @@ considerando los niveles de contaminación atmosférica actuales del estado ${st
 - Índice global (AI, máximo de los anteriores): ${AI ?? "N/D"}
 
 ### Solicitud del usuario:
-"${user_text ?? "Dame recomendaciones de actividades"}"
+"${user_text}"
 
 ---
 
 ### Instrucciones para tu respuesta:
 
-1. **Analiza el tipo de actividad** (por ejemplo: correr, caminar, andar en bici, ir de picnic, visitar un parque, etc.).  
-   Si menciona un **lugar específico** dentro del estado (como una ciudad, parque, playa o montaña), adáptate a las condiciones típicas de ese entorno.
+1.  **Evaluación de riesgo**: Inicia tu respuesta con una frase que resuma la situación actual, mencionando el nivel de riesgo según la escala AQI y el contaminante principal que lo causa.
+    * **0-50 (Bueno):** La calidad del aire es excelente.
+    * **51-100 (Moderado):** La calidad del aire es aceptable, pero algunas personas sensibles deben tomar precauciones.
+    * **101-150 (Insalubre para Grupos Sensibles):** La calidad del aire es insalubre para grupos sensibles (niños, adultos mayores, personas con enfermedades respiratorias como asma).
+    * **151-200 (Insalubre):** La calidad del aire es insalubre para todos. Se deben limitar las actividades al aire libre.
+    * **>200 (Muy Insalubre/Peligroso):** La calidad del aire es muy insalubre. Evita cualquier actividad al aire libre.
 
-2. **Evalúa el riesgo** en función del AI:
-   - 0–50 → bueno
-   - 51–100 → moderado
-   - 101–150 → insalubre para grupos sensibles
-   - 151–200 → insalubre
-   - >200 → muy insalubre o peligroso
+2.  **Recomendaciones personalizadas**: Proporciona consejos prácticos y concretos.
+    * **Momento y duración**: Recomienda la mejor hora del día para realizar la actividad (generalmente cuando los niveles de NO₂ y O₃ son más bajos, como temprano en la mañana o por la noche). Sugiere una duración máxima para la actividad para minimizar la exposición.
+    * **Indumentaria y equipo**: Describe la ropa más adecuada (por ejemplo, transpirable, que cubra la piel) y el equipo de protección (como el uso de una mascarilla N95 si la calidad del aire es insalubre, especialmente si el contaminante principal es PM).
+    * **Precauciones de salud**: Menciona acciones específicas como mantenerse hidratado, hacer pausas frecuentes y evitar zonas de alto tráfico vehicular, ya que el NO₂ y el PM son más altos en esas áreas.
+    * **Alternativas seguras**: Si la calidad del aire no es favorable para la actividad deseada, sugiere alternativas seguras en interiores (por ejemplo, gimnasio, piscina cubierta, etc.).
 
-3. **Indica claramente** si la actividad es recomendable o no, y **por cuánto tiempo máximo** puede realizarse sin riesgo (en minutos u horas), según la calidad del aire.
-
-4. **Da recomendaciones personalizadas**, incluyendo:
-   - Mejor horario para realizar la actividad.
-   - Precauciones de salud (hidratación, mascarilla, pausas, evitar zonas con tráfico, etc.).
-   - Alternativas seguras si el aire no es favorable.
-   - Mención explícita a grupos sensibles (niños, adultos mayores, asmáticos, embarazadas).
-
-5. **Termina siempre con un tono empático y de cuidado**, recordando que estas son recomendaciones basadas en la información de contaminación atmosférica y no sustituyen la orientación médica o institucional.
-
-Tu respuesta debe ser breve, clara y estructurada, con secciones numeradas o por guiones, evitando repeticiones o frases introductorias genéricas.
+3.  **Tono y formato**: Mantén un tono empático y de cuidado. Utiliza un formato claro con viñetas o listas numeradas para que la información sea fácil de digerir. La respuesta debe ser concisa y no sustituir el consejo médico.
 `.trim();
 
       const resp = await model.generateContent(prompt);
