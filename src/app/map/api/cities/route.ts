@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findLatestCsv, readCsvRows, toNum } from "../../lib/csv";
+import { findLatestCsv, readCsvRows, toNum } from "./../../lib/csv";
 
 export async function GET(){
   const csvPath = findLatestCsv();
