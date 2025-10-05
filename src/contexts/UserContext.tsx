@@ -15,6 +15,7 @@ interface UserContextType {
     surname: string;
     birthdate: string;
     zipCode: string;
+    tagIds?: number[];
   }) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -66,6 +67,7 @@ export function UserProvider({ children }: UserProviderProps) {
     surname: string;
     birthdate: string;
     zipCode: string;
+    tagIds?: number[];
   }) => {
     try {
       await authService.register(userData);

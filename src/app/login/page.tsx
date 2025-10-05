@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { IconMail, IconLock } from '@tabler/icons-react';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -92,33 +93,43 @@ export default function Login() {
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
                   Email address
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleChange}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <IconMail className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
+                    placeholder="Enter your email"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
               <div>
                 <label htmlFor="userPss" className="block text-sm font-medium text-slate-700 mb-2">
                   Password
                 </label>
-                <input
-                  id="userPss"
-                  name="userPss"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
-                  placeholder="Enter your password"
-                  value={formData.userPss}
-                  onChange={handleChange}
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <IconLock className="h-5 w-5 text-slate-400" />
+                  </div>
+                  <input
+                    id="userPss"
+                    name="userPss"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
+                    placeholder="Enter your password"
+                    value={formData.userPss}
+                    onChange={handleChange}
+                  />
+                </div>
               </div>
             </div>
 

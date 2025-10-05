@@ -1,3 +1,9 @@
+export interface Tag {
+  tagId: number;
+  tagName: string;
+  tagType: string;
+}
+
 export interface User {
   uuid: string;
   email: string;
@@ -6,6 +12,7 @@ export interface User {
   birthdate: string;
   zipCode: string;
   createdAt: string;
+  tags?: Tag[];
 }
 
 export interface LoginData {
@@ -20,6 +27,28 @@ export interface RegisterData {
   surname: string;
   birthdate: string;
   zipCode: string;
+  tagIds?: number[];
+}
+
+export interface TagsByType {
+  [category: string]: {
+    tagId: number;
+    tagName: string;
+  }[];
+}
+
+export interface TagsResponse {
+  success: boolean;
+  data: {
+    tags: Tag[];
+  };
+}
+
+export interface TagsByTypeResponse {
+  success: boolean;
+  data: {
+    tagsByType: TagsByType;
+  };
 }
 
 export interface AuthResponse {

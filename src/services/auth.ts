@@ -5,6 +5,8 @@ import {
   AuthResponse,
   RefreshResponse,
   ProfileResponse,
+  TagsResponse,
+  TagsByTypeResponse,
   User,
 } from '../types/auth';
 
@@ -63,6 +65,14 @@ class AuthService {
         return null;
       }
     }
+  }
+
+  async getAllTags(): Promise<TagsResponse> {
+    return apiService.get<TagsResponse>('/auth/tags');
+  }
+
+  async getTagsByType(): Promise<TagsByTypeResponse> {
+    return apiService.get<TagsByTypeResponse>('/auth/tags/by-type');
   }
 
   isAuthenticated(): boolean {
