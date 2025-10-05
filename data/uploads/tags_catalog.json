@@ -1,0 +1,24 @@
+{
+  "Activity": [
+    "Running",
+    "Outdoor Activities",
+    "Biking",
+    "Walking",
+    "Sports"
+  ],
+  "Vulnerability": [
+    "Elderly",
+    "Children",
+    "Asthma",
+    "Chronic Respiratory Conditions",
+    "Pregnancy",
+    "Cardiovascular Issues"
+  ],
+  "Lifestyle": [
+    "Pet Owner",
+    "Commuter",
+    "Gardening",
+    "Construction Worker",
+    "Outdoor Enthusiast"
+  ]
+}
