@@ -8,16 +8,35 @@ type ByState = Record<string, { name?: string; NO2?: number|null; O3?: number|nu
 type Props = { onClose: () => void };
 
 const API_BASE = '/map/api';
-const PURPLE_PRIMARY = '#BB4DFF';  // Purple theme color
-const PURPLE_LIGHT = '#E9D5FF';    // Light purple
+const PURPLE_PRIMARY = '#BB4DFF';
+const PURPLE_LIGHT = '#E9D5FF';
 const WHITE = '#FFFFFF';
 const SLATE_600 = '#475569';
 const SLATE_700 = '#334155';
 const SLATE_900 = '#0F172A';
 
+function RiskBadge({ label }: { label?: string }) {
+  const map: Record<string, string> = {
+    Good:          'bg-green-100 text-green-700 border-green-300',
+    Moderate:      'bg-yellow-100 text-yellow-700 border-yellow-300',
+    USG:           'bg-amber-100 text-amber-800 border-amber-300',
+    Unhealthy:     'bg-orange-100 text-orange-800 border-orange-300',
+    VeryUnhealthy: 'bg-red-100 text-red-700 border-red-300',
+    'Very Unhealthy': 'bg-red-100 text-red-700 border-red-300',
+    Hazardous:     'bg-purple-100 text-purple-700 border-purple-300',
+    Unknown:       'bg-slate-100 text-slate-700 border-slate-300',
+  };
+  const cls = map[label || 'Unknown'] || map.Unknown;
+  return (
+    <span className={`inline-flex items-center px-3 py-1 rounded-full border text-xs font-semibold ${cls}`}>
+      {label || 'Unknown'}
+    </span>
+  );
+}
+
 function makePurpleScale(min: number, max: number) {
   const domain = [min, (min + max) / 2, max];
-  const range = ['#E9D5FF', '#BB4DFF', '#7C3AED']; // Light purple -> Primary purple -> Dark purple
+  const range = ['#E9D5FF', '#BB4DFF', '#7C3AED'];
   const piece = d3.scaleLinear<string>().domain(domain).range(range).clamp(true);
   return d3.scaleSequential((t: number) => piece(min + t * (max - min))).domain([0, 1]);
 }
@@ -65,7 +84,6 @@ function AirQualityTimeSeriesChart({
   const [timeSeriesData, setTimeSeriesData] = useState<any[]>([]);
 
   useEffect(() => {
-    // sample data generator (replace with your API later)
     const generateSampleData = () => {
       const pollutants = ['NO2', 'O3', 'PM', 'CH2O', 'AI'];
       const series: any[] = [];
@@ -281,6 +299,7 @@ export default function ModalAirQuality({ onClose }: Props) {
 
   const [data, setData] = useState<{ byState: ByState; json?: string; tags?: string[] } | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
 
   const [statesList, setStatesList] = useState<{ fips: string; name: string }[]>([]);
   const [selectedFips, setSelectedFips] = useState<string>('');
@@ -288,11 +307,31 @@ export default function ModalAirQuality({ onClose }: Props) {
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<Catalog>({ Activity: [], Vulnerability: [], Lifestyle: [] });
-
-  // NEW: chart toggle
   const [showChart, setShowChart] = useState(true);
 
   const buckets = useMemo(() => bucketize(selectedTags), [selectedTags]);
+
+type GeminiScores = {
+  outdoor_suitability: number;
+  health_risk: number;
+  confidence: number;
+};
+
+type GeminiModel = {
+  state: { name: string; fips: string; country: string; date: string };
+  dominant_pollutant: 'NO2' | 'O3' | 'PM' | 'CH2O' | 'Unknown';
+  risk_level_label: 'Good' | 'Moderate' | 'USG' | 'Unhealthy' | 'Very Unhealthy' | 'Hazardous' | 'Unknown';
+  scores: GeminiScores;
+  pollutants: { NO2: number|null; O3: number|null; PM: number|null; CH2O: number|null; AI: number|null };
+  tailored_notes: string[];
+  recommendations: string[];
+  indoor_alternatives: string[];
+  disclaimer: string;
+};
+
+const [geminiRaw, setGeminiRaw] = useState<any|null>(null);      // respuesta cruda del endpoint
+const [geminiModel, setGeminiModel] = useState<GeminiModel|null>(null); // JSON parseado (si vino bien)
+
 
   const selectedStateData = useMemo(() => {
     if (!data?.byState || !selectedFips) return null;
@@ -303,6 +342,56 @@ export default function ModalAirQuality({ onClose }: Props) {
     if (!selectedStateData) return '';
     return selectedStateData.name || statesList.find(s => s.fips === selectedFips)?.name || 'Unknown State';
   }, [selectedStateData, selectedFips, statesList]);
+
+  // Función para llamar a Gemini
+  const callGemini = async () => {
+  if (!selectedFips || !selectedStateData) {
+    console.warn('Select a state first.');
+    return;
+  }
+
+  const body = {
+    fips: selectedFips,
+    state_name: selectedStateName,
+    country: 'United States',
+    date: selectedDate,
+    user_text: `Consider my tags and preferences.`,
+    tags: selectedTags,
+    pollutants: {
+      NO2: selectedStateData.NO2 ?? null,
+      O3: selectedStateData.O3 ?? null,
+      PM: selectedStateData.PM ?? null,
+      CH2O: selectedStateData.CH2O ?? null,
+      AI: selectedStateData.ai ?? null,
+    },
+  };
+
+  console.log('🚀 Sending to Gemini:', body);
+
+  setGeminiLoading(true);
+  setGeminiModel(null);
+  setGeminiRaw(null);
+
+  try {
+    const res = await fetch(`${API_BASE}/state-recommendations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const out = await res.json();
+    console.log('✅ Gemini response:', out);
+
+    setGeminiRaw(out);
+    if (out?.model && typeof out.model === 'object') {
+      setGeminiModel(out.model as GeminiModel);
+    }
+  } catch (e) {
+    console.error('Gemini fetch error:', e);
+  } finally {
+    setGeminiLoading(false);
+  }
+};
+
 
   // Load states & default user tags
   useEffect(() => {
@@ -404,7 +493,7 @@ export default function ModalAirQuality({ onClose }: Props) {
         .attr('fill', (d: any) => {
           const fips = String(d.id).padStart(2, '0');
           const s = data.byState[fips];
-          if (!s) return '#F3F4F6'; // Light gray for no data
+          if (!s) return '#F3F4F6';
           const t = (s.ai - min) / (maxSafe - min);
           return colorSequential(Math.max(0, Math.min(1, t)));
         })
@@ -422,6 +511,16 @@ export default function ModalAirQuality({ onClose }: Props) {
       /* ---------- ALWAYS HORIZONTAL LEGEND ---------- */
       const Lw = Math.min(520, Math.max(260, Math.round(w * 0.75)));
       const Lh = 22;
+
+      const legendBox = root.append('div')
+  .style('width', '100%')
+  .style('display', 'flex')
+  .style('justifyContent', 'center')
+  .style('alignItems', 'center')
+  // ⬇️ separa la barra del mapa y evita solapamiento
+  .style('marginTop', '34px')
+  .style('paddingBottom', '80px')
+  .node() as HTMLDivElement;
 
       const legendSvg = d3.select(legendBox)
         .append('svg')
@@ -441,61 +540,19 @@ export default function ModalAirQuality({ onClose }: Props) {
         .attr('offset', d => d.offset)
         .attr('stop-color', d => d.color);
 
-      const gL = legendSvg.append('g').attr('transform', `translate(30, 10)`);
-const stateName =
-  selectedStateData?.name ||
-  statesList.find(s => s.fips === selectedFips)?.name ||
-  'Unknown State';
+      const gL = legendSvg.append('g').attr('transform', `translate(30, 16)`);
 
-async function callGemini() {
-  if (!selectedFips || !selectedStateData) {
-    console.warn('Select a state first.');
-    return;
-  }
-
-  // Objeto que pides: estado, contaminantes y tags
-  const payload = {
-    state: { fips: selectedFips, name: stateName },
-    date: selectedDate,
-    pollutants: {
-      NO2:  selectedStateData.NO2  ?? null,
-      O3:   selectedStateData.O3   ?? null,
-      PM:   selectedStateData.PM   ?? null,
-      CH2O: selectedStateData.CH2O ?? null,
-      AI:   selectedStateData.ai   ?? null,
-    },
-    tags: selectedTags, // array de strings ya normalizado
-  };
-
-  // 👀 Imprime el objeto completo
-  console.log('Gemini payload →', payload);
-
-  // (Opcional) Llamada a tu API para consultar Gemini
-  try {
-    const res = await fetch(`${API_BASE}/state-recommendations`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fips: selectedFips,
-        user_text: `Consider my tags: ${selectedTags.join(', ')}. Date: ${selectedDate}`,
-      }),
-    });
-    const out = await res.json();
-    console.log('Gemini response →', out);
-  } catch (e) {
-    console.error('Gemini fetch error:', e);
-  }
-}
       gL.append('text')
         .attr('x', Lw / 2)
         .attr('y', -2)
         .attr('text-anchor', 'middle')
         .style('fill', SLATE_700)
-        .style('fontSize', '14px')
+        .style('fontSize', '18px')
         .style('fontWeight', '600')
         .text('Air Quality Index');
 
       gL.append('rect')
+        .attr('y', 4)
         .attr('width', Lw)
         .attr('height', Lh)
         .attr('fill', `url(#${gradientId})`)
@@ -504,13 +561,21 @@ async function callGemini() {
         .attr('stroke', PURPLE_LIGHT)
         .attr('stroke-width', 1);
 
-      const scale = d3.scaleLinear().domain([min, maxSafe]).range([0, Lw]);
-      gL.append('g')
-        .attr('transform', `translate(0, ${Lh + 8})`)
-        .call(d3.axisBottom(scale).ticks(6).tickSize(4).tickPadding(6) as any)
-        .call(g => g.selectAll('text').style('fill', SLATE_600).style('fontSize', '12px'))
-        .call(g => g.selectAll('line,path').style('stroke', PURPLE_LIGHT));
-      /* ---------- end horizontal legend ---------- */
+const scale = d3.scaleLinear()
+  .domain([0, 100])
+  .range([0, Lw]);
+
+gL.append('g')
+  .attr('transform', `translate(0, ${Lh + 12})`)
+  .call(
+    d3.axisBottom(scale)
+      .tickValues([0, 20, 40, 60, 80, 100]) // marcas claras
+      .tickSize(4)
+      .tickPadding(6) as any
+  )
+  .call(g => g.selectAll('text').style('fill', SLATE_600).style('fontSize', '12px'))
+  .call(g => g.selectAll('line,path').style('stroke', PURPLE_LIGHT));
+
     })();
 
     return () => { mount.innerHTML = ''; };
@@ -527,6 +592,7 @@ async function callGemini() {
       translate(${-x}, ${-y})
     `;
   }
+
   function animateZoom(to: [number, number, number]) {
     if (!gMapRef.current) return;
     const i = d3.interpolateZoom(currentTransform, to);
@@ -592,10 +658,7 @@ async function callGemini() {
   );
 
   const savePreferences = () => {
-    // TODO: replace with your API call
     console.log('Selected tags:', selectedTags);
-    // Example:
-    // await fetch('/api/save-preferences', { method:'POST', body: JSON.stringify({ tags: selectedTags }) })
   };
 
   return (
@@ -680,7 +743,11 @@ async function callGemini() {
 
           {/* Map + (always horizontal) legend */}
           <div className="grid gap-4 md:grid-cols-[1fr] animate-in slide-in-from-right-5 duration-700 delay-300">
-            <div ref={wrapRef} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden" />
+ <div
+   ref={wrapRef}
+   className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 overflow-visible pb-3"
+ />
+ <div></div>
           </div>
 
           {/* Chart section with toggle */}
@@ -714,7 +781,7 @@ async function callGemini() {
             <div className="text-lg font-semibold text-slate-900">Your Preferences</div>
 
             {(['Activity','Vulnerability','Lifestyle'] as const).map((cat, index) => (
-              <div key={cat} className={`space-y-3 animate-in slide-in-from-left-3 duration-500 delay-${600 + index * 100}`}>
+              <div key={cat} className="space-y-3 animate-in slide-in-from-left-3 duration-500">
                 <div className="text-sm font-semibold text-slate-700">{cat}</div>
                 <div className="flex flex-wrap gap-2">
                   {catalog[cat]?.length ? (
@@ -742,15 +809,106 @@ async function callGemini() {
               </div>
             ))}
 
-            {/* Bottom action button */}
-            <div className="pt-4 border-t border-slate-200">
+            {/* Bottom action buttons */}
+            <div className="pt-4 border-t border-slate-200 flex gap-3 flex-wrap">
               <button
                 onClick={savePreferences}
                 className="px-6 py-3 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-purple-600 text-white border-purple-600 hover:bg-purple-700 shadow-md"
               >
                 Save Preferences
               </button>
+              <button
+                onClick={callGemini}
+                disabled={geminiLoading}
+                className="px-6 py-3 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {geminiLoading ? 'Asking Gemini...' : 'Ask Gemini'}
+              </button>
             </div>
+            {/* --- Gemini Recommendation Card --- */}
+{(geminiLoading || geminiModel || geminiRaw) && (
+  <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 space-y-4">
+    <div className="flex items-center justify-between">
+      <div className="text-lg font-semibold text-slate-900">
+        Gemini Recommendation
+      </div>
+
+      {/* Label de Riesgo */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-slate-500">Risk:</span>
+        <RiskBadge label={geminiModel?.risk_level_label || 'Unknown'} />
+      </div>
+    </div>
+
+    {/* Subheader con contaminante dominante */}
+    <div className="text-sm text-slate-600">
+      <span className="font-medium text-slate-700">Dominant pollutant:</span>{' '}
+      <span className="inline-flex items-center px-2 py-0.5 rounded border text-xs bg-purple-50 text-purple-700 border-purple-200">
+        {geminiModel?.dominant_pollutant || 'Unknown'}
+      </span>
+    </div>
+
+    {/* Puntajes rápidos */}
+    {geminiModel?.scores && (
+      <div className="flex flex-wrap gap-2 text-xs">
+        <span className="inline-flex items-center px-2 py-1 rounded border bg-slate-50 text-slate-700 border-slate-200">
+          Outdoor suitability: <b className="ml-1">{geminiModel.scores.outdoor_suitability}</b>/100
+        </span>
+        <span className="inline-flex items-center px-2 py-1 rounded border bg-slate-50 text-slate-700 border-slate-200">
+          Health risk: <b className="ml-1">{geminiModel.scores.health_risk}</b>/100
+        </span>
+        <span className="inline-flex items-center px-2 py-1 rounded border bg-slate-50 text-slate-700 border-slate-200">
+          Confidence: <b className="ml-1">{geminiModel.scores.confidence}</b>/100
+        </span>
+      </div>
+    )}
+
+    {/* Recomendaciones */}
+    {geminiModel?.recommendations?.length ? (
+      <div className="space-y-1">
+        <div className="text-sm font-medium text-slate-800">Recommendations</div>
+        <ul className="list-disc pl-5 text-sm text-slate-700">
+          {geminiModel.recommendations.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      </div>
+    ) : null}
+
+    {/* Notas personalizadas */}
+    {geminiModel?.tailored_notes?.length ? (
+      <div className="space-y-1">
+        <div className="text-sm font-medium text-slate-800">Tailored notes</div>
+        <ul className="list-disc pl-5 text-sm text-slate-700">
+          {geminiModel.tailored_notes.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      </div>
+    ) : null}
+
+    {/* Alternativas indoor si aplica */}
+    {geminiModel?.indoor_alternatives?.length ? (
+      <div className="space-y-1">
+        <div className="text-sm font-medium text-slate-800">Indoor alternatives</div>
+        <ul className="list-disc pl-5 text-sm text-slate-700">
+          {geminiModel.indoor_alternatives.map((r, i) => <li key={i}>{r}</li>)}
+        </ul>
+      </div>
+    ) : null}
+
+    {/* Disclaimer */}
+    {geminiModel?.disclaimer ? (
+      <div className="text-xs text-slate-500 border-t pt-3">
+        {geminiModel.disclaimer}
+      </div>
+    ) : null}
+
+    {/* Fallback si no se parseó JSON (te deja ver lo crudo) */}
+    {!geminiModel && !geminiLoading && geminiRaw?.summary && (
+      <div className="text-xs text-slate-600 bg-slate-50 p-3 rounded border border-slate-200">
+        <div className="font-medium mb-1">Raw model text:</div>
+        <pre className="whitespace-pre-wrap">{geminiRaw.summary}</pre>
+      </div>
+    )}
+  </div>
+)}
           </div>
 
           <div className="text-xs text-center p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 animate-in slide-in-from-bottom-3 duration-700 delay-700">

@@ -29,7 +29,8 @@ export default function Page() {
               </p>
             </div>
           </div>
-          {/* Search Section - More compact */}
+
+          {/* Search Section - Compact */}
           <div className="mb-6 animate-in slide-in-from-top-5 duration-700">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -58,87 +59,18 @@ export default function Page() {
               <div
                 className="w-full"
                 style={{
-                  height: 'clamp(500px, 80vh, 1000px)', // Increased minimum height and max height
+                  // Mapa más grande: ocupa casi todo el viewport
+                  height: 'clamp(620px, 88vh, 1200px)',
                 }}
               >
-                <StaticUSChoropleth height="100%" />
+                <StaticUSChoropleth
+                  // El propio SVG también crece agresivamente
+             
+                />
               </div>
             </div>
           </div>
-
-          {/* Information Cards - More compact layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8 animate-in slide-in-from-bottom-5 duration-700 delay-500">
-            {/* AQI Legend Card */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4">
-              <h3 className="text-base font-semibold text-slate-900 mb-3">Air Quality Index</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded bg-green-500 mr-2"></div>
-                    <span className="text-slate-700">Good</span>
-                  </div>
-                  <span className="text-slate-500">0-50</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded bg-yellow-500 mr-2"></div>
-                    <span className="text-slate-700">Moderate</span>
-                  </div>
-                  <span className="text-slate-500">51-100</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded bg-orange-500 mr-2"></div>
-                    <span className="text-slate-700">Unhealthy</span>
-                  </div>
-                  <span className="text-slate-500">101-150</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 rounded bg-purple-500 mr-2"></div>
-                    <span className="text-slate-700">Very Unhealthy</span>
-                  </div>
-                  <span className="text-slate-500">151+</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Pollutants Info Card */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4">
-              <h3 className="text-base font-semibold text-slate-900 mb-3">Key Pollutants</h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-700 font-medium">NO₂</span>
-                  <span className="text-slate-500">Nitrogen Dioxide</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700 font-medium">O₃</span>
-                  <span className="text-slate-500">Ozone</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700 font-medium">PM</span>
-                  <span className="text-slate-500">Particulate Matter</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-700 font-medium">CH₂O</span>
-                  <span className="text-slate-500">Formaldehyde</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Tips Card */}
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4">
-              <h3 className="text-base font-semibold text-slate-900 mb-3">Health Tips</h3>
-              <div className="space-y-1 text-xs text-slate-600">
-                <p>• Check AQI before outdoor activities</p>
-                <p>• Limit exposure on unhealthy days</p>
-                <p>• Use air purifiers when needed</p>
-                <p>• Stay hydrated and wear masks</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Notice - Compact */}
+          {/* Notice */}
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 animate-in slide-in-from-bottom-5 duration-700 delay-700">
             <div className="flex items-start">
               <div className="flex-shrink-0">
