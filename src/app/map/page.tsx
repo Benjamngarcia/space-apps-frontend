@@ -1,116 +1,202 @@
-// 'use client';
+"use client";
 
-// import dynamic from 'next/dynamic';
-// import { useState } from 'react';
+import dynamic from "next/dynamic";
+import { ProtectedRoute } from "../../components/ProtectedRoute";
+import { Header } from "../../components/Header";
 
-// const D3USMap = dynamic(() => import('./components/D3USMap'), { ssr: false });
+const D3USChoropleth = dynamic(() => import("./components/D3USChoropleth"), {
+  ssr: false,
+});
 
-// export default function Page(){
-//   const [zip, setZip] = useState('90001');
-//   const [text, setText] = useState('Quiero salir a correr');
-//   const [chat, setChat] = useState<{role:'user'|'bot'; text:string}[]>([]);
-
-//   async function ask(z: string, t: string){
-//     setChat(c=>[...c, {role:'user', text:`ZIP ${z}: ${t}`}]);
-//     try{
-//       const r = await fetch('/map/api/recommendations', {
-//         method:'POST', headers:{'Content-Type':'application/json'},
-//         body: JSON.stringify({ zip: z, user_text: t })
-//       });
-//       const d = await r.json();
-//       if(d.error){
-//         setChat(c=>[...c, {role:'bot', text:`Error: ${d.error}`}]);
-//         return;
-//       }
-//       setChat(c=>[...c, {role:'bot', text:`AI=${d.AI ?? 'N/D'} NO2=${d.NO2 ?? 'N/D'} O3=${d.O3 ?? 'N/D'} PM=${d.PM ?? 'N/D'} CH2O=${d.CH2O ?? 'N/D'}\n${d.summary}`}]);
-//       setText('');
-//     }catch(e:any){
-//       setChat(c=>[...c, {role:'bot', text:'Error: '+e.message}]);
-//     }
-//   }
-
-//   return (
-//     <main className="p-6 space-y-6">
-//       <header>
-//         <h1 className="text-2xl font-bold">Mapa (D3) — NASA App / carpeta <code>mapa</code></h1>
-//         <p className="text-sm opacity-70">
-//           Coloca el CSV más reciente en <code>data/uploads/</code> con columnas: <b>zip, NO2, O3, AI, CH2O, PM, lat, lon</b>.
-//         </p>
-//       </header>
-
-//       <section className="space-y-3">
-//         <D3USMap onSelectZip={(z)=> ask(z, text || 'Dame recomendaciones de actividades')} />
-//         <div className="flex gap-2">
-//           <input className="border px-3 py-2 rounded w-28" value={zip} onChange={e=>setZip(e.target.value)} placeholder="ZIP" />
-//           <input className="border px-3 py-2 rounded flex-1" value={text} onChange={e=>setText(e.target.value)} placeholder="Intención (correr, bici, niños…)" />
-//           <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={()=>ask(zip, text)}>Pedir recomendaciones</button>
-//         </div>
-//         <div className="border rounded p-3 h-64 overflow-auto bg-white">
-//           {chat.map((m,i)=>(
-//             <div key={i} className={`my-2 p-2 rounded max-w-[75%] ${m.role==='user' ? 'ml-auto bg-blue-600 text-white' : 'mr-auto bg-gray-100'}`}>
-//               {m.text}
-//             </div>
-//           ))}
-//         </div>
-//       </section>
-//     </main>
-//   );
-// }
-
-'use client';
-
-import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { ProtectedRoute } from '../../components/ProtectedRoute';
-import { useUser } from '../../contexts/UserContext';
-
-const D3USChoropleth = dynamic(() => import('./components/D3USChoropleth'), { ssr: false });
-
-export default function Page(){
-  const { user, logout } = useUser();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
-
+export default function Page() {
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header with user info and logout */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <h1 className="text-xl font-semibold text-gray-900">Space Apps Dashboard</h1>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-50 animate-in fade-in duration-700">
+        <Header />
+
+        <main className="max-w-7xl mx-auto py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+          <div className="mb-6 sm:mb-8 animate-in slide-in-from-top-5 duration-700">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2 transition-all duration-300">
+                  Air Quality Map
+                </h1>
+                <p className="text-slate-600 text-sm sm:text-base">
+                  Real-time environmental data visualization by state
+                </p>
+              </div>
               <div className="flex items-center space-x-4">
-                <Link
-                  href="/profile"
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Profile
-                </Link>
-                <span className="text-sm text-gray-700">
-                  Welcome, {user?.name} {user?.surname}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
+                <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-4 transform transition-all duration-300 hover:shadow-lg">
+                  <h3 className="text-xs sm:text-sm font-medium text-slate-700 mb-2 sm:mb-3">
+                    AQI Scale
+                  </h3>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded mr-1"></div>
+                      <span className="text-slate-600">Good</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-yellow-500 rounded mr-1"></div>
+                      <span className="text-slate-600">Moderate</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-orange-500 rounded mr-1"></div>
+                      <span className="text-slate-600">Unhealthy</span>
+                    </div>
+                    <div className="flex items-center">
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded mr-1"></div>
+                      <span className="text-slate-600">Hazardous</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </header>
 
-        <main className="p-6 space-y-6">
-          <h1 className="text-2xl font-bold">Coropleta por estado (JSON) — Máximo de NO2/O3/PM/CH2O</h1>
-          <p className="text-sm opacity-70">
-            Coloca el archivo más reciente en <code>data/uploads/</code> con nombre <b>YYYYMMDD_hhmm.json</b> y el esquema indicado.
-          </p>
-          <D3USChoropleth />
+          {/* Info Card */}
+          <div className="bg-purple-50/90 backdrop-blur-sm border border-purple-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 transform transition-all duration-300 hover:shadow-lg animate-in slide-in-from-left-5 delay-200">
+            <div className="flex items-start">
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 mt-0.5 mr-2 sm:mr-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <div>
+                <h3 className="text-xs sm:text-sm font-medium text-purple-800 mb-1">
+                  Data Source Information
+                </h3>
+                <p className="text-xs sm:text-sm text-purple-700">
+                  Environmental data is sourced from the latest uploads in{" "}
+                  <code className="bg-purple-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs">
+                    data/uploads/
+                  </code>{" "}
+                  with filename format <strong>YYYYMMDD_hhmm.json</strong>{" "}
+                  containing state-level pollutant maximums.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Map Container */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl animate-in slide-in-from-bottom-5 delay-300">
+            <div className="mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900 mb-2 transition-all duration-300">
+                State-Level Pollution Data
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600">
+                Click on any state to view detailed pollutant information (NO2,
+                O3, PM, CH2O levels)
+              </p>
+            </div>
+
+            {/* Map Component */}
+            <div className="relative transform transition-all duration-500">
+              <D3USChoropleth />
+            </div>
+          </div>
+
+          {/* Pollutant Information Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mt-6 sm:mt-8 animate-in slide-in-from-bottom-5 delay-500">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-purple-100 rounded-xl mx-auto mb-2 sm:mb-4 group-hover:bg-purple-200 transition-colors duration-300">
+                <svg
+                  className="w-4 h-4 sm:w-6 sm:h-6 text-purple-600 group-hover:scale-110 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 group-hover:text-purple-600 transition-colors duration-300">
+                NO2
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600">
+                Nitrogen Dioxide
+              </p>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-cyan-100 rounded-xl mx-auto mb-2 sm:mb-4 group-hover:bg-cyan-200 transition-colors duration-300">
+                <svg
+                  className="w-4 h-4 sm:w-6 sm:h-6 text-cyan-600 group-hover:scale-110 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 group-hover:text-cyan-600 transition-colors duration-300">
+                O3
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600">Ozone</p>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-green-100 rounded-xl mx-auto mb-2 sm:mb-4 group-hover:bg-green-200 transition-colors duration-300">
+                <svg
+                  className="w-4 h-4 sm:w-6 sm:h-6 text-green-600 group-hover:scale-110 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 group-hover:text-green-600 transition-colors duration-300">
+                PM
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600">
+                Particulate Matter
+              </p>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-12 sm:h-12 bg-orange-100 rounded-xl mx-auto mb-2 sm:mb-4 group-hover:bg-orange-200 transition-colors duration-300">
+                <svg
+                  className="w-4 h-4 sm:w-6 sm:h-6 text-orange-600 group-hover:scale-110 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-sm sm:text-base font-semibold text-slate-900 mb-1 group-hover:text-orange-600 transition-colors duration-300">
+                CH2O
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600">Formaldehyde</p>
+            </div>
+          </div>
         </main>
       </div>
     </ProtectedRoute>
