@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProtectedRoute } from "../../components/ProtectedRoute";
 import { Header } from "../../components/Header";
+import { useUser } from "../../contexts/UserContext";
+import { authService } from "../../services/auth";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
@@ -12,6 +14,7 @@ import {
   IconMapPin,
   IconBell,
   IconSparkles,
+  IconInfoCircle,
 } from "@tabler/icons-react";
 import StaticUSChoropleth from "../map/components/StaticUSChoropleth";
 
@@ -22,6 +25,46 @@ const ModalAirQuality = dynamic(
 
 export default function Home() {
   const [open, setOpen] = useState(false);
+  const { user } = useUser();
+  const [airQualityData, setAirQualityData] = useState<any>(null);
+  const [loadingAirQuality, setLoadingAirQuality] = useState(false);
+
+  useEffect(() => {
+    const fetchAirQualityData = async () => {
+      if (user?.zipCode) {
+        setLoadingAirQuality(true);
+        try {
+          const response = await authService.getZipData(user.zipCode);
+          if (response.success && response.data) {
+            setAirQualityData(response.data);
+          }
+        } catch (error) {
+          console.error('Failed to fetch air quality data:', error);
+        } finally {
+          setLoadingAirQuality(false);
+        }
+      }
+    };
+
+    fetchAirQualityData();
+  }, [user?.zipCode]);
+
+  // Function to get air quality status and color based on MaxPollutant value
+  const getAirQualityStatus = (maxPollutant: number) => {
+    if (maxPollutant <= 30) {
+      return { status: 'Good', color: 'green', percentage: 75 };
+    } else if (maxPollutant <= 50) {
+      return { status: 'Moderate', color: 'yellow', percentage: 60 };
+    } else if (maxPollutant <= 70) {
+      return { status: 'Unhealthy for Sensitive Groups', color: 'orange', percentage: 45 };
+    } else if (maxPollutant <= 90) {
+      return { status: 'Unhealthy', color: 'red', percentage: 30 };
+    } else {
+      return { status: 'Very Unhealthy', color: 'purple', percentage: 15 };
+    }
+  };
+
+  const aqiInfo = airQualityData ? getAirQualityStatus(airQualityData.MaxPollutant) : { status: 'Loading...', color: 'gray', percentage: 0 };
 
   return (
     <ProtectedRoute>
@@ -43,15 +86,49 @@ export default function Home() {
           </div>
 
           <div className=" gap-3 sm:gap-6 mb-8 sm:mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-500">
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group">
-              <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300">
-                Good
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-3 sm:p-6 text-center transform transition-all duration-300 hover:shadow-lg hover:scale-105 group relative">
+              {airQualityData && (
+                <div className="absolute top-2 right-2 group/info">
+                  <IconInfoCircle className="w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer" />
+                  <div className="absolute right-0 top-6 bg-slate-800 text-white text-xs rounded-lg p-2 opacity-0 group-hover/info:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                    Based on real-time data for ZIP {user?.zipCode}
+                  </div>
+                </div>
+              )}
+              <div className={`text-2xl sm:text-3xl font-bold mb-1 sm:mb-2 group-hover:scale-110 transition-transform duration-300 ${
+                aqiInfo.color === 'green' ? 'text-green-600' :
+                aqiInfo.color === 'yellow' ? 'text-yellow-600' :
+                aqiInfo.color === 'orange' ? 'text-orange-600' :
+                aqiInfo.color === 'red' ? 'text-red-600' :
+                aqiInfo.color === 'purple' ? 'text-purple-600' :
+                'text-gray-600'
+              }`}>
+                {loadingAirQuality ? 'Loading...' : aqiInfo.status}
               </div>
               <div className="text-xs sm:text-sm text-slate-600 mb-2">
-                Current Air Quality Status
+                {user?.zipCode ? `Air Quality in ${user.zipCode}` : 'Current Air Quality Status'}
+                {airQualityData && (
+                  <div className="text-xs text-slate-500 mt-1">
+                    {airQualityData.State} • Max Pollutant: {airQualityData.Pollutant} ({airQualityData.MaxPollutant.toFixed(1)})
+                  </div>
+                )}
               </div>
-              <div className="w-full bg-green-100 rounded-full h-1.5 sm:h-2 group-hover:h-2 sm:group-hover:h-2.5 transition-all duration-300">
-                <div className="bg-green-500 h-full rounded-full w-3/4 transition-all duration-500 group-hover:w-4/5"></div>
+              <div className={`w-full rounded-full h-1.5 sm:h-2 group-hover:h-2 sm:group-hover:h-2.5 transition-all duration-300 ${
+                aqiInfo.color === 'green' ? 'bg-green-100' :
+                aqiInfo.color === 'yellow' ? 'bg-yellow-100' :
+                aqiInfo.color === 'orange' ? 'bg-orange-100' :
+                aqiInfo.color === 'red' ? 'bg-red-100' :
+                aqiInfo.color === 'purple' ? 'bg-purple-100' :
+                'bg-gray-100'
+              }`}>
+                <div className={`h-full rounded-full transition-all duration-500 group-hover:w-4/5 ${
+                  aqiInfo.color === 'green' ? 'bg-green-500' :
+                  aqiInfo.color === 'yellow' ? 'bg-yellow-500' :
+                  aqiInfo.color === 'orange' ? 'bg-orange-500' :
+                  aqiInfo.color === 'red' ? 'bg-red-500' :
+                  aqiInfo.color === 'purple' ? 'bg-purple-500' :
+                  'bg-gray-500'
+                }`} style={{ width: `${aqiInfo.percentage}%` }}></div>
               </div>
             </div>
           </div>

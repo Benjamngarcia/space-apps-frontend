@@ -79,6 +79,10 @@ class AuthService {
     return apiService.get<any>('/files/map-data');
   }
 
+  async getZipData(zipCode: string): Promise<any> {
+    return apiService.get<any>(`/files/zip/${zipCode}`);
+  }
+
   isAuthenticated(): boolean {
     return !!apiService.getAccessToken();
   }
