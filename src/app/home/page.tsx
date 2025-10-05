@@ -34,7 +34,7 @@ export default function Home() {
               <IconCloud className="w-8 h-8 text-purple-600" />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3 sm:mb-4 transition-all duration-300">
-              Air Quality Dashboard
+              Aeros
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto px-4 transition-all duration-300">
               Monitor environmental conditions and get real-time air quality

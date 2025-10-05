@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { IconCalendar, IconChevronDown, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 interface DateInputProps {
@@ -40,6 +40,15 @@ export const DateInput = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Sync external value changes to internal state
+  useEffect(() => {
+    if (value && (!selectedDate || selectedDate.toISOString().split('T')[0] !== value)) {
+      setSelectedDate(new Date(value));
+    } else if (!value && selectedDate) {
+      setSelectedDate(null);
+    }
+  }, [value]); // Only depend on value prop
+
   // Generate years (18-100 years old)
   const currentYear = new Date().getFullYear();
   const minYear = currentYear - 100;
@@ -71,9 +80,16 @@ export const DateInput = ({
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${day}`;
-      onChange(dateString);
+      
+      // Only call onChange if the value actually changed
+      if (dateString !== value) {
+        onChange(dateString);
+      }
+    } else if (value) {
+      // If selectedDate is null but value exists, clear it
+      onChange('');
     }
-  }, [selectedDate, onChange]);
+  }, [selectedDate]); // Remove onChange from dependencies
 
   const formatDisplayDate = () => {
     if (!selectedDate) {
@@ -110,14 +126,14 @@ export const DateInput = ({
     return days;
   };
 
-  const handleDateClick = (date: Date) => {
+  const handleDateClick = useCallback((date: Date) => {
     if (!isDateDisabled(date)) {
       setSelectedDate(date);
       setIsOpen(false);
     }
-  };
+  }, []);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  const navigateMonth = useCallback((direction: 'prev' | 'next') => {
     setViewDate(prev => {
       const newDate = new Date(prev);
       if (direction === 'prev') {
@@ -127,9 +143,9 @@ export const DateInput = ({
       }
       return newDate;
     });
-  };
+  }, []);
 
-  const navigateYear = (direction: 'prev' | 'next') => {
+  const navigateYear = useCallback((direction: 'prev' | 'next') => {
     setViewDate(prev => {
       const newDate = new Date(prev);
       const targetYear = direction === 'prev' ? prev.getFullYear() - 1 : prev.getFullYear() + 1;
@@ -140,7 +156,7 @@ export const DateInput = ({
       }
       return newDate;
     });
-  };
+  }, [minYear, maxYear]);
 
   const isDateDisabled = (date: Date) => {
     const today = new Date();
