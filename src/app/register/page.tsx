@@ -68,7 +68,7 @@ export default function Register() {
     try {
       const { confirmPassword, ...registrationData } = formData;
       await register(registrationData);
-      router.push('/home'); // Redirect to home page after registration
+      router.push('/home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

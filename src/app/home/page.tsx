@@ -1,19 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import { ProtectedRoute } from "../../components/ProtectedRoute";
 import { Header } from "../../components/Header";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   IconCloud,
-  IconMap,
   IconUser,
   IconChevronRight,
   IconMapPin,
   IconBell,
   IconSparkles,
 } from "@tabler/icons-react";
+import StaticUSChoropleth from "../map/components/StaticUSChoropleth";
+
+const ModalAirQuality = dynamic(
+  () => import("../map/components/D3USChoropleth"),
+  { ssr: false }
+);
 
 export default function Home() {
+  const [open, setOpen] = useState(false);
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-violet-50 animate-in fade-in duration-700">
@@ -49,28 +58,29 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-8 sm:mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 group">
-              <h1 className="text-gray-900">mapa</h1>
+              <StaticUSChoropleth height="100%" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 group">
-              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl mb-3 sm:mb-4 group-hover:bg-blue-200 transition-colors duration-300">
-                <IconSparkles className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
+              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-xl mb-3 sm:mb-4 group-hover:bg-purple-200 transition-colors duration-300">
+                <IconSparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600 group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+              <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-purple-600 transition-colors duration-300">
                 AI Recommendations
               </h3>
               <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4 transition-colors duration-300">
-                Get personalized air quality insights and location-based recommendations powered by artificial intelligence.
+                Get personalized air quality insights and location-based
+                recommendations powered by artificial intelligence.
               </p>
-              <Link
-                href="#"
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm"
+              <button
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center px-3 sm:px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-pruple-700 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm cursor-pointer"
               >
                 <IconChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 Get Recommendations
-              </Link>
+              </button>
             </div>
 
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 group">
@@ -81,11 +91,12 @@ export default function Home() {
                 Your Profile
               </h3>
               <p className="text-sm sm:text-base text-slate-600 mb-3 sm:mb-4 transition-colors duration-300">
-                Customize your dashboard, manage notification preferences, and track your air quality monitoring history.
+                Customize your dashboard, manage notification preferences, and
+                track your air quality monitoring history.
               </p>
               <Link
                 href="/profile"
-                className="inline-flex items-center px-3 sm:px-4 py-2 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm"
+                className="inline-flex items-center px-3 sm:px-4 py-2 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-700 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm cursor-pointer"
               >
                 <IconChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                 View Profile
@@ -105,13 +116,15 @@ export default function Home() {
                 <IconMapPin className="w-4 h-4 mr-2" />
                 Explore by Location
               </Link>
-              <button className="inline-flex items-center justify-center sm:justify-start px-4 py-2.5 sm:py-2 bg-yellow-50 text-yellow-700 font-medium rounded-lg hover:bg-yellow-100 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm">
+              <button className="inline-flex items-center justify-center sm:justify-start px-4 py-2.5 sm:py-2 bg-yellow-50 text-yellow-700 font-medium rounded-lg hover:bg-yellow-100 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm cursor-pointer">
                 <IconBell className="w-4 h-4 mr-2" />
                 Set Alerts
               </button>
             </div>
           </div>
         </main>
+
+        {open && <ModalAirQuality onClose={() => setOpen(false)} />}
       </div>
     </ProtectedRoute>
   );

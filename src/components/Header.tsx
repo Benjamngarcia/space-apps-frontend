@@ -10,7 +10,7 @@ import {
   IconX,
   IconLogout,
   IconUser,
-  IconMap,
+  IconHome,
   IconDashboard,
 } from "@tabler/icons-react";
 
@@ -37,7 +37,7 @@ export function Header() {
             <div className="flex items-center justify-center w-8 h-8 bg-purple-600 rounded-lg transform transition-transform duration-200 hover:scale-110">
               <IconCloud className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-slate-900">Aeros</h1>
+            <Link href="/" className="text-xl font-bold text-slate-900">Aeros</Link>
           </div>
 
           <div className="hidden sm:flex items-center space-x-4">
@@ -53,9 +53,6 @@ export function Header() {
             >
               Profile
             </Link>
-            <span className="text-sm text-slate-600">
-              Welcome, {user?.name}
-            </span>
             <button
               onClick={handleLogout}
               className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-sm"
@@ -97,17 +94,8 @@ export function Header() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors duration-200"
             >
-              <IconDashboard className="h-5 w-5 mr-3" />
-              Dashboard
-            </Link>
-
-            <Link
-              href="/map"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors duration-200"
-            >
-              <IconMap className="h-5 w-5 mr-3" />
-              Map
+              <IconHome className="h-5 w-5 mr-3" />
+              Home
             </Link>
 
             <Link
