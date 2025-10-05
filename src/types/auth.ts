@@ -79,3 +79,40 @@ export interface ErrorResponse {
   success: false;
   error: string;
 }
+
+export interface AIRecommendationRequest {
+  tagIds: number[];
+  outDate?: string;
+  countryId: string;
+}
+
+export interface AIRecommendation {
+  country: string;
+  date: string;
+  dominant_pollutant: string;
+  risk_level_label: string;
+  scores: {
+    outdoor_suitability: number;
+    health_risk: number;
+    confidence: number;
+  };
+  pollutants: {
+    NO2: number;
+    O3: number;
+    PM: number;
+    CH2O: number;
+    AI: number;
+  };
+  tailored_notes: string[];
+  recommendations: string[];
+  indoor_alternatives: string[];
+  disclaimer: string;
+}
+
+export interface AIRecommendationResponse {
+  success: boolean;
+  data: {
+    recommendation: AIRecommendation;
+    summary: string;
+  };
+}

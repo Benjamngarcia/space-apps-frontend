@@ -7,6 +7,8 @@ import {
   ProfileResponse,
   TagsResponse,
   TagsByTypeResponse,
+  AIRecommendationRequest,
+  AIRecommendationResponse,
   User,
 } from '../types/auth';
 
@@ -81,6 +83,10 @@ class AuthService {
 
   async getZipData(zipCode: string): Promise<any> {
     return apiService.get<any>(`/files/zip/${zipCode}`);
+  }
+
+  async getAIRecommendations(data: AIRecommendationRequest): Promise<AIRecommendationResponse> {
+    return apiService.post<AIRecommendationResponse>('/auth/requests', data);
   }
 
   isAuthenticated(): boolean {

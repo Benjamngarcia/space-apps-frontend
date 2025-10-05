@@ -17,6 +17,7 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import StaticUSChoropleth from "../map/components/StaticUSChoropleth";
+import AIRecommendationsModal from "../../components/AIRecommendationsModal";
 
 const ModalAirQuality = dynamic(
   () => import("../map/components/D3USChoropleth"),
@@ -25,6 +26,7 @@ const ModalAirQuality = dynamic(
 
 export default function Home() {
   const [open, setOpen] = useState(false);
+  const [aiModalOpen, setAiModalOpen] = useState(false);
   const { user } = useUser();
   const [airQualityData, setAirQualityData] = useState<any>(null);
   const [loadingAirQuality, setLoadingAirQuality] = useState(false);
@@ -168,7 +170,7 @@ export default function Home() {
                 recommendations powered by artificial intelligence.
               </p>
               <button
-                onClick={() => setOpen(true)}
+                onClick={() => setAiModalOpen(true)}
                 className="inline-flex items-center px-3 sm:px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-pruple-700 transition-all duration-200 hover:scale-105 transform active:scale-95 text-sm cursor-pointer"
               >
                 <IconChevronRight className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
@@ -218,6 +220,7 @@ export default function Home() {
         </main>
 
         {open && <ModalAirQuality onClose={() => setOpen(false)} />}
+        {aiModalOpen && <AIRecommendationsModal onClose={() => setAiModalOpen(false)} />}
       </div>
     </ProtectedRoute>
   );
