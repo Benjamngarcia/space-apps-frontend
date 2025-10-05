@@ -8,12 +8,16 @@ type ByState = Record<string, { name?: string; NO2?: number|null; O3?: number|nu
 type Props = { onClose: () => void };
 
 const API_BASE = '/map/api';
-const BLUE = '#6ec9f4';
+const PURPLE_PRIMARY = '#BB4DFF';  // Purple theme color
+const PURPLE_LIGHT = '#E9D5FF';    // Light purple
 const WHITE = '#FFFFFF';
+const SLATE_600 = '#475569';
+const SLATE_700 = '#334155';
+const SLATE_900 = '#0F172A';
 
-function makeGreenOrangePurpleScale(min: number, max: number) {
+function makePurpleScale(min: number, max: number) {
   const domain = [min, (min + max) / 2, max];
-  const range = ['#22C55E', '#F59E0B', '#a01dec'];
+  const range = ['#E9D5FF', '#BB4DFF', '#7C3AED']; // Light purple -> Primary purple -> Dark purple
   const piece = d3.scaleLinear<string>().domain(domain).range(range).clamp(true);
   return d3.scaleSequential((t: number) => piece(min + t * (max - min))).domain([0, 1]);
 }
@@ -126,7 +130,7 @@ function AirQualityTimeSeriesChart({
 
     const colorScale = d3.scaleOrdinal<string>()
       .domain(['NO2', 'O3', 'PM', 'CH2O', 'AI'])
-      .range(['#22C55E', '#F59E0B', '#a01dec', '#6ec9f4', '#EF4444']);
+      .range(['#10B981', '#F59E0B', '#EF4444', '#3B82F6', PURPLE_PRIMARY]);
 
     const svg = svgSel
       .attr('width', width)
@@ -136,7 +140,7 @@ function AirQualityTimeSeriesChart({
       .style('height', 'auto')
       .style('background', WHITE)
       .style('borderRadius', '12px')
-      .style('border', `2px solid ${BLUE}`);
+      .style('border', `2px solid ${PURPLE_LIGHT}`);
 
     svg.append('text')
       .attr('x', width / 2)
@@ -144,27 +148,27 @@ function AirQualityTimeSeriesChart({
       .attr('text-anchor', 'middle')
       .style('fontSize', '18px')
       .style('fontWeight', 'bold')
-      .style('fill', BLUE)
+      .style('fill', SLATE_700)
       .text(`Air Quality Trends — ${stateName}`);
 
     svg.append('g')
       .attr('transform', `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).ticks(width / 100).tickSizeOuter(0) as any)
-      .call(g => g.selectAll('text').style('fill', BLUE).style('fontSize', '12px'))
-      .call(g => g.selectAll('line,path').style('stroke', BLUE));
+      .call(g => g.selectAll('text').style('fill', SLATE_600).style('fontSize', '12px'))
+      .call(g => g.selectAll('line,path').style('stroke', PURPLE_LIGHT));
 
     svg.append('g')
       .attr('transform', `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y) as any)
-      .call(g => g.selectAll('text').style('fill', BLUE).style('fontSize', '12px'))
-      .call(g => g.selectAll('line,path').style('stroke', BLUE));
+      .call(g => g.selectAll('text').style('fill', SLATE_600).style('fontSize', '12px'))
+      .call(g => g.selectAll('line,path').style('stroke', PURPLE_LIGHT));
 
     svg.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('y', 15)
       .attr('x', -height / 2)
       .attr('text-anchor', 'middle')
-      .style('fill', BLUE)
+      .style('fill', SLATE_600)
       .style('fontSize', '14px')
       .text('Concentration');
 
@@ -172,7 +176,7 @@ function AirQualityTimeSeriesChart({
       .attr('x', width / 2)
       .attr('y', height - 5)
       .attr('text-anchor', 'middle')
-      .style('fill', BLUE)
+      .style('fill', SLATE_600)
       .style('fontSize', '14px')
       .text('Date');
 
@@ -214,8 +218,8 @@ function AirQualityTimeSeriesChart({
       });
 
     const tooltip = svg.append('g').style('display', 'none');
-    tooltip.append('rect').attr('fill', WHITE).attr('stroke', BLUE).attr('rx', 4).attr('ry', 4);
-    tooltip.append('text').attr('font-size', '12px').attr('fill', BLUE);
+    tooltip.append('rect').attr('fill', WHITE).attr('stroke', PURPLE_PRIMARY).attr('rx', 4).attr('ry', 4);
+    tooltip.append('text').attr('font-size', '12px').attr('fill', SLATE_700);
 
     const bisect = d3.bisector((d: any) => d.Date).left;
 
@@ -374,7 +378,7 @@ export default function ModalAirQuality({ onClose }: Props) {
     const min = d3.min(aiVals) ?? 0;
     const max = d3.max(aiVals) ?? 200;
     const maxSafe = Math.max(max, min + 1);
-    const colorSequential = makeGreenOrangePurpleScale(min, maxSafe);
+    const colorSequential = makePurpleScale(min, maxSafe);
 
     const projection = d3.geoAlbersUsa().translate([w / 2, h / 2]).scale(Math.min(w, h) * 1.2);
     const path = d3.geoPath(projection);
@@ -400,12 +404,20 @@ export default function ModalAirQuality({ onClose }: Props) {
         .attr('fill', (d: any) => {
           const fips = String(d.id).padStart(2, '0');
           const s = data.byState[fips];
-          if (!s) return `${WHITE}26`;
+          if (!s) return '#F3F4F6'; // Light gray for no data
           const t = (s.ai - min) / (maxSafe - min);
           return colorSequential(Math.max(0, Math.min(1, t)));
         })
-        .attr('stroke', `${WHITE}8C`)
-        .attr('stroke-width', 0.8);
+        .attr('stroke', PURPLE_LIGHT)
+        .attr('stroke-width', 1)
+        .style('transition', 'all 0.3s ease')
+        .style('cursor', 'pointer')
+        .on('mouseenter', function() {
+          d3.select(this).attr('stroke', PURPLE_PRIMARY).attr('stroke-width', 2);
+        })
+        .on('mouseleave', function() {
+          d3.select(this).attr('stroke', PURPLE_LIGHT).attr('stroke-width', 1);
+        });
 
       /* ---------- ALWAYS HORIZONTAL LEGEND ---------- */
       const Lw = Math.min(520, Math.max(260, Math.round(w * 0.75)));
@@ -478,8 +490,8 @@ async function callGemini() {
         .attr('x', Lw / 2)
         .attr('y', -2)
         .attr('text-anchor', 'middle')
-        .style('fill', WHITE)
-        .style('fontSize', '12px')
+        .style('fill', SLATE_700)
+        .style('fontSize', '14px')
         .style('fontWeight', '600')
         .text('Air Quality Index');
 
@@ -487,17 +499,17 @@ async function callGemini() {
         .attr('width', Lw)
         .attr('height', Lh)
         .attr('fill', `url(#${gradientId})`)
-        .attr('rx', 10)
-        .attr('ry', 10)
-        .attr('stroke', `${WHITE}8C`)
-        .attr('stroke-width', 1.25);
+        .attr('rx', 8)
+        .attr('ry', 8)
+        .attr('stroke', PURPLE_LIGHT)
+        .attr('stroke-width', 1);
 
       const scale = d3.scaleLinear().domain([min, maxSafe]).range([0, Lw]);
       gL.append('g')
         .attr('transform', `translate(0, ${Lh + 8})`)
         .call(d3.axisBottom(scale).ticks(6).tickSize(4).tickPadding(6) as any)
-        .call(g => g.selectAll('text').style('fill', WHITE).style('fontSize', '11px'))
-        .call(g => g.selectAll('line,path').style('stroke', `${WHITE}8C`));
+        .call(g => g.selectAll('text').style('fill', SLATE_600).style('fontSize', '12px'))
+        .call(g => g.selectAll('line,path').style('stroke', PURPLE_LIGHT));
       /* ---------- end horizontal legend ---------- */
     })();
 
@@ -568,13 +580,11 @@ async function callGemini() {
     <button
       type="button"
       onClick={() => toggleTag(t)}
-      className="text-xs px-3 py-1.5 rounded-full border"
-      style={{
-        background: isSelected(t) ? BLUE : WHITE,
-        color: isSelected(t) ? WHITE : BLUE,
-        borderColor: BLUE,
-        transition: 'all .15s ease',
-      }}
+      className={`text-xs px-3 py-2 rounded-full border transition-all duration-200 hover:scale-105 transform active:scale-95 ${
+        isSelected(t) 
+          ? 'bg-purple-600 text-white border-purple-600 shadow-md' 
+          : 'bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50'
+      }`}
       aria-pressed={isSelected(t)}
     >
       {t}
@@ -590,65 +600,78 @@ async function callGemini() {
 
   return (
     <div
-      className="fixed inset-0 z-50"
-      style={{ background: 'rgba(0,0,0,0.25)', overflowY: 'auto', padding: '20px' }}
+      className="fixed inset-0 z-50 animate-in fade-in duration-300"
+      style={{ background: 'rgba(15, 23, 42, 0.4)', overflowY: 'auto', padding: '20px' }}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="relative mx-auto w-[96vw] max-w-6xl rounded-2xl border"
-        style={{ background: '#FFFFFF', borderColor: '#FFFFFF', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+        className="relative mx-auto w-[96vw] max-w-6xl rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-5 duration-500"
+        style={{ 
+          background: 'linear-gradient(to bottom right, rgb(250, 245, 255), rgb(237, 233, 254))', 
+          borderColor: PURPLE_LIGHT, 
+          maxHeight: '90vh', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: `1px solid ${BLUE}`, position: 'sticky', top: 0, background: WHITE, zIndex: 1 }}
+          className="flex items-center justify-between px-6 py-4 animate-in slide-in-from-top-3 duration-700 delay-100"
+          style={{ 
+            borderBottom: `1px solid ${PURPLE_LIGHT}`, 
+            position: 'sticky', 
+            top: 0, 
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 1,
+            borderRadius: '16px 16px 0 0'
+          }}
         >
-          <div className="font-semibold" style={{ color: BLUE }}>Search recommendations by state</div>
+          <div className="font-semibold text-xl text-slate-900">
+            Search Air Quality Recommendations
+          </div>
           <button
             onClick={onClose}
-            className="px-3 py-1 rounded-full border text-sm sm:text-base"
-            style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
+            className="inline-flex items-center px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50"
             aria-label="Close"
           >
-            Close
+            ✕ Close
           </button>
         </div>
 
         {/* Body (scrollable) */}
-        <div className="p-4 space-y-4" style={{ background: BLUE, overflowY: 'auto' }}>
+        <div className="p-6 space-y-6 overflow-y-auto">
           {/* Query row */}
-          <div className="rounded-2xl p-4 sm:p-6" style={{ background: WHITE, border: `1px solid ${WHITE}` }}>
-            <div className="font-medium mb-4 text-lg sm:text-xl" style={{ color: BLUE }}>
-              I want to know the air quality in:
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 animate-in slide-in-from-left-5 duration-700 delay-200">
+            <div className="font-semibold mb-4 text-xl text-slate-900">
+              Select Location and Date
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="flex flex-col">
-                <label className="text-sm sm:text-base font-medium mb-2" style={{ color: BLUE }}>State</label>
+                <label className="text-sm font-medium mb-2 text-slate-700">State</label>
                 <select
                   value={selectedFips}
                   onChange={(e) => setSelectedFips(e.target.value)}
-                  className="w-full px-3 py-2 sm:py-3 rounded-lg border text-sm sm:text-base"
-                  style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
+                  className="w-full px-3 py-3 rounded-lg border text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
                 >
                   {statesList.map((s) => <option key={s.fips} value={s.fips}>{s.name}</option>)}
                 </select>
               </div>
 
               <div className="flex flex-col">
-                <label className="text-sm sm:text-base font-medium mb-2" style={{ color: BLUE }}>Day</label>
+                <label className="text-sm font-medium mb-2 text-slate-700">Date</label>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 sm:py-3 rounded-lg border text-sm sm:text-base"
-                  style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
+                  className="w-full px-3 py-3 rounded-lg border text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
                 />
               </div>
 
               <div className="flex items-center sm:items-end">
-                <div className="text-xs sm:text-sm leading-relaxed" style={{ color: BLUE }}>
+                <div className="text-xs leading-relaxed text-slate-600">
                   Select a state to zoom; the map below will focus smoothly on it.
                 </div>
               </div>
@@ -656,58 +679,59 @@ async function callGemini() {
           </div>
 
           {/* Map + (always horizontal) legend */}
-          <div className="grid gap-4 md:grid-cols-[1fr]">
-            <div ref={wrapRef} />
+          <div className="grid gap-4 md:grid-cols-[1fr] animate-in slide-in-from-right-5 duration-700 delay-300">
+            <div ref={wrapRef} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden" />
           </div>
 
           {/* Chart section with toggle */}
           {selectedStateData && (
-            <div className="rounded-2xl p-4 sm:p-6" style={{ background: WHITE, border: `1px solid ${WHITE}` }}>
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 animate-in slide-in-from-left-5 duration-700 delay-400">
               <div className="flex items-center justify-between mb-4">
-                <div className="font-medium text-lg sm:text-xl" style={{ color: BLUE }}>
+                <div className="font-semibold text-xl text-slate-900">
                   Air Quality Trends for {selectedStateName}
                 </div>
                 <button
                   onClick={() => setShowChart(v => !v)}
-                  className="px-3 py-1.5 rounded-full border text-xs sm:text-sm"
-                  style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
+                  className="px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50"
                 >
                   {showChart ? 'Hide chart' : 'Show chart'}
                 </button>
               </div>
 
               {showChart && (
-                <AirQualityTimeSeriesChart
-                  stateData={selectedStateData}
-                  stateName={selectedStateName}
-                />
+                <div className="animate-in slide-in-from-bottom-3 duration-500">
+                  <AirQualityTimeSeriesChart
+                    stateData={selectedStateData}
+                    stateName={selectedStateName}
+                  />
+                </div>
               )}
             </div>
           )}
 
           {/* Tags selection */}
-          <div className="rounded-2xl p-4 sm:p-6 space-y-6" style={{ background: WHITE, border: `1px solid ${WHITE}` }}>
-            <div className="text-base font-semibold" style={{ color: BLUE }}>Your preferences</div>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 space-y-6 animate-in slide-in-from-bottom-5 duration-700 delay-500">
+            <div className="text-lg font-semibold text-slate-900">Your Preferences</div>
 
-            {(['Activity','Vulnerability','Lifestyle'] as const).map((cat) => (
-              <div key={cat} className="space-y-2">
-                <div className="text-sm font-semibold" style={{ color: BLUE }}>{cat}</div>
+            {(['Activity','Vulnerability','Lifestyle'] as const).map((cat, index) => (
+              <div key={cat} className={`space-y-3 animate-in slide-in-from-left-3 duration-500 delay-${600 + index * 100}`}>
+                <div className="text-sm font-semibold text-slate-700">{cat}</div>
                 <div className="flex flex-wrap gap-2">
                   {catalog[cat]?.length ? (
                     catalog[cat].map((t) => <Tag key={`${cat}-${t}`} t={t} />)
                   ) : (
-                    <span className="text-xs" style={{ color: BLUE, opacity: .8 }}>No options</span>
+                    <span className="text-xs text-slate-500 opacity-80">No options available</span>
                   )}
                 </div>
 
                 {buckets[cat].length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="text-xs text-slate-600 font-medium mr-2">Selected:</div>
                     {buckets[cat].map((t) => (
                       <button
                         key={`sel-${cat}-${t}`}
                         onClick={() => toggleTag(t)}
-                        className="text-[11px] px-2.5 py-1 rounded-full"
-                        style={{ background: BLUE, color: WHITE, border: `1px solid ${BLUE}` }}
+                        className="text-xs px-3 py-1 rounded-full transition-all duration-200 hover:scale-105 transform active:scale-95 bg-purple-600 text-white border border-purple-600 hover:bg-purple-700"
                         title="Remove"
                       >
                         {t} ✕
@@ -719,29 +743,18 @@ async function callGemini() {
             ))}
 
             {/* Bottom action button */}
-            <div className="pt-2">
+            <div className="pt-4 border-t border-slate-200">
               <button
                 onClick={savePreferences}
-                className="px-4 py-2 rounded-full border text-sm sm:text-base"
-                style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
+                className="px-6 py-3 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-purple-600 text-white border-purple-600 hover:bg-purple-700 shadow-md"
               >
-                Save preferences
+                Save Preferences
               </button>
-              {/* <button
-  onClick={callGemini}
-  className="px-4 py-2 rounded-full border text-sm sm:text-base"
-  style={{ borderColor: BLUE, color: BLUE, background: WHITE }}
->
-  Ask Gemini
-</button> */}
-
             </div>
           </div>
 
-          <div className="text-xs sm:text-sm text-center p-3 sm:p-4 rounded-lg"
-               style={{ background: WHITE, color: BLUE, border: `1px solid ${WHITE}` }}>
-            The visualization uses a continuous gradient (green → orange → purple). Higher values indicate higher
-            potential health risk from air pollutants.
+          <div className="text-xs text-center p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 animate-in slide-in-from-bottom-3 duration-700 delay-700">
+            <span className="font-medium">ℹ️ Notice:</span> The visualization uses a continuous gradient (light purple → purple → dark purple). Higher values indicate higher potential health risk from air pollutants.
           </div>
         </div>
       </div>

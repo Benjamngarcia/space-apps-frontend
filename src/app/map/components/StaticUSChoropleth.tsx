@@ -7,13 +7,13 @@ import { feature } from 'topojson-client';
 type ByState = Record<string, { name?: string; NO2?: number|null; O3?: number|null; PM?: number|null; CH2O?: number|null; ai: number }>;
 
 const API_BASE = '/map/api';
-const BLUE = '#6ec9f4';
+const PURPLE_PRIMARY = '#BB4DFF';  // Purple theme color
 const WHITE = '#FFFFFF';
 
-// Degradado verde -> naranja -> morado
-function makeGreenOrangePurpleScale(min: number, max: number) {
+// Degraded purple theme: light purple -> purple -> dark purple
+function makePurpleScale(min: number, max: number) {
   const domain = [min, (min + max) / 2, max];
-  const range = ['#22C55E', '#F59E0B', '#a01dec'];
+  const range = ['#E9D5FF', '#BB4DFF', '#7C3AED']; // Light purple -> Primary purple -> Dark purple
   const piece = d3.scaleLinear<string>().domain(domain).range(range).clamp(true);
   return d3.scaleSequential((t: number) => piece(min + t * (max - min))).domain([0, 1]);
 }
@@ -66,7 +66,7 @@ export default function StaticUSChoropleth({
         .style('display', 'grid')
         .style('gridTemplateRows', '1fr auto')
         .style('rowGap', '8px')
-        .style('background', BLUE);
+        .style('background', 'transparent'); // Transparent background to show gradient
 
       const mapWrap = root.append('div')
         .style('width', '100%')
@@ -109,7 +109,7 @@ export default function StaticUSChoropleth({
       const aiVals = Object.values(data.byState).map((s) => s.ai);
       const min = d3.min(aiVals) ?? 0;
       const max = d3.max(aiVals) ?? 200;
-      const colorSequential = makeGreenOrangePurpleScale(min, Math.max(max, min + 1));
+      const colorSequential = makePurpleScale(min, Math.max(max, min + 1));
 
       // Geo datos
       const topo = await (await fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')).json();
@@ -127,13 +127,20 @@ export default function StaticUSChoropleth({
         .attr('fill', (d: any) => {
           const fips = String(d.id).padStart(2, '0');
           const s = data.byState[fips];
-          if (!s) return `${WHITE}26`;
+          if (!s) return '#F3F4F6'; // Light gray for no data
           const t = (s.ai - min) / (Math.max(max, min + 1) - min);
           return colorSequential(Math.max(0, Math.min(1, t)));
         })
-        .attr('stroke', `${WHITE}8C`)
+        .attr('stroke', '#E5E7EB') // Light gray border
         .attr('stroke-width', 1)
-        .style('transition', 'fill 0.3s ease');
+        .style('transition', 'fill 0.3s ease, stroke 0.3s ease')
+        .style('cursor', 'pointer')
+        .on('mouseenter', function() {
+          d3.select(this).attr('stroke', PURPLE_PRIMARY).attr('stroke-width', 2);
+        })
+        .on('mouseleave', function() {
+          d3.select(this).attr('stroke', '#E5E7EB').attr('stroke-width', 1);
+        });
 
       // ====== LEYENDA SIEMPRE ABAJO (HORIZONTAL) ======
       const Lw = Math.min(640, Math.max(260, Math.round(mapW * 0.66))); // ancho responsive
@@ -161,8 +168,8 @@ export default function StaticUSChoropleth({
         .attr('x', Lw / 2)
         .attr('y', -2)
         .attr('text-anchor', 'middle')
-        .style('fill', WHITE)
-        .style('font-size', '12px')
+        .style('fill', '#374151') // Slate-700 color for better readability
+        .style('font-size', '14px')
         .style('font-weight', 600)
         .text('Air Quality Index');
 
@@ -171,9 +178,9 @@ export default function StaticUSChoropleth({
         .attr('width', Lw)
         .attr('height', Lh)
         .attr('fill', `url(#${gradientId})`)
-        .attr('rx', 10).attr('ry', 10)
-        .attr('stroke', `${WHITE}8C`)
-        .attr('stroke-width', 1.25);
+        .attr('rx', 8).attr('ry', 8)
+        .attr('stroke', '#E5E7EB') // Light gray border
+        .attr('stroke-width', 1);
 
       // Eje
       const scale = d3.scaleLinear().domain([min, Math.max(max, min + 1)]).range([0, Lw]);
@@ -181,8 +188,8 @@ export default function StaticUSChoropleth({
         .attr('transform', `translate(0, ${Lh + 8})`)
         .call(d3.axisBottom(scale).ticks(6).tickSize(4).tickPadding(6) as any);
 
-      axisG.selectAll('text').style('fill', WHITE).style('font-size', '11px').style('font-weight', 500);
-      axisG.selectAll('line, path').style('stroke', `${WHITE}8C`).style('stroke-width', 1.25);
+      axisG.selectAll('text').style('fill', '#6B7280').style('font-size', '12px').style('font-weight', 500); // Slate-500
+      axisG.selectAll('line, path').style('stroke', '#D1D5DB').style('stroke-width', 1); // Slate-300
     }
 
     draw();
