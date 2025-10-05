@@ -53,7 +53,7 @@ function LegendAQI({
   }, []);
 
   // Ajustar dimensiones para móvil
-  const adjustedWidth = isMobile ? Math.min(280, width) : width;
+  const adjustedWidth = isMobile ? Math.min(240, width * 0.9) : width;
   const adjustedHeight = isMobile ? 12 : height;
   const fontSize = isMobile ? 10 : 12;
   const tickFontSize = isMobile ? 9 : 11;
@@ -71,11 +71,11 @@ function LegendAQI({
   const x = (v: number) => ((v - min) / (max - min)) * adjustedWidth;
 
   return (
-    <div style={{display:'flex', justifyContent:'center', width:'100%', padding: isMobile ? '0 8px' : '0'}}>
+    <div style={{display:'flex', justifyContent:'center', width:'100%', padding: isMobile ? '0 4px' : '0'}}>
       <svg
         width={W}
         height={H}
-        style={{flex: '0 0 auto', maxWidth: '100%'}}
+        style={{flex: '0 0 auto', maxWidth: '100%', overflow: 'visible'}}
         aria-label="AQI legend"
       >
         <defs>
@@ -449,11 +449,19 @@ export default function StaticUSChoropleth({
       </div>
 
       {/* Leyenda responsive */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 4 : 8 }}>
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        gap: isMobile ? 4 : 8,
+        width: '100%',
+        overflow: 'hidden',
+        padding: isMobile ? '0 8px' : '0 16px'
+      }}>
         <LegendAQI
           min={aiStats.min}
           max={aiStats.max}
-          width={isMobile ? 280 : 420}
+          width={isMobile ? 240 : 420}
           height={isMobile ? 12 : 16}
         />
         

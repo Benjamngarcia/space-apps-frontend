@@ -159,12 +159,15 @@ function AirQualityTimeSeriesChart({
     const svgSel = d3.select(svgRef.current);
     svgSel.selectAll("*").remove();
 
-    const width = 800;
-    const height = 500;
-    const marginTop = 40;
-    const marginRight = 140;
-    const marginBottom = 40;
-    const marginLeft = 60;
+    // Responsive dimensions
+    const containerWidth = svgRef.current.parentElement?.clientWidth || 800;
+    const isMobile = containerWidth < 640;
+    const width = Math.min(containerWidth - 20, isMobile ? 360 : 800);
+    const height = isMobile ? 300 : 500;
+    const marginTop = isMobile ? 30 : 40;
+    const marginRight = isMobile ? 80 : 140;
+    const marginBottom = isMobile ? 30 : 40;
+    const marginLeft = isMobile ? 40 : 60;
 
     const stocks = timeSeriesData.flatMap((d) =>
       ["NO2", "O3", "PM", "CH2O", "AI"].map((Symbol) => ({
@@ -218,9 +221,9 @@ function AirQualityTimeSeriesChart({
     svg
       .append("text")
       .attr("x", width / 2)
-      .attr("y", 20)
+      .attr("y", 15)
       .attr("text-anchor", "middle")
-      .style("fontSize", "18px")
+      .style("fontSize", isMobile ? "14px" : "18px")
       .style("fontWeight", "bold")
       .style("fill", SLATE_700)
       .text(`Air Quality Trends — ${stateName}`);
@@ -235,7 +238,7 @@ function AirQualityTimeSeriesChart({
           .tickSizeOuter(0) as any
       )
       .call((g) =>
-        g.selectAll("text").style("fill", SLATE_600).style("fontSize", "12px")
+        g.selectAll("text").style("fill", SLATE_600).style("fontSize", isMobile ? "10px" : "12px")
       )
       .call((g) => g.selectAll("line,path").style("stroke", PURPLE_LIGHT));
 
@@ -244,18 +247,18 @@ function AirQualityTimeSeriesChart({
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y) as any)
       .call((g) =>
-        g.selectAll("text").style("fill", SLATE_600).style("fontSize", "12px")
+        g.selectAll("text").style("fill", SLATE_600).style("fontSize", isMobile ? "10px" : "12px")
       )
       .call((g) => g.selectAll("line,path").style("stroke", PURPLE_LIGHT));
 
     svg
       .append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", 15)
+      .attr("y", 12)
       .attr("x", -height / 2)
       .attr("text-anchor", "middle")
       .style("fill", SLATE_600)
-      .style("fontSize", "14px")
+      .style("fontSize", isMobile ? "12px" : "14px")
       .text("Concentration");
 
     svg
@@ -264,7 +267,7 @@ function AirQualityTimeSeriesChart({
       .attr("y", height - 5)
       .attr("text-anchor", "middle")
       .style("fill", SLATE_600)
-      .style("fontSize", "14px")
+      .style("fontSize", isMobile ? "12px" : "14px")
       .text("Date");
 
     const line = d3
@@ -298,7 +301,7 @@ function AirQualityTimeSeriesChart({
       .attr("y", (d) => y(d.value))
       .attr("dy", "0.35em")
       .style("fontWeight", "bold")
-      .style("fontSize", "12px")
+      .style("fontSize", isMobile ? "10px" : "12px")
       .text((d) => {
         const units: Record<string, string> = {
           NO2: "ppm",
@@ -307,6 +310,9 @@ function AirQualityTimeSeriesChart({
           CH2O: "ppm",
           AI: "index",
         };
+        if (isMobile) {
+          return `${d.key}: ${d.value.toFixed(1)}`;
+        }
         return `${d.key}: ${d.value.toFixed(2)}${
           units[d.key] ? " " + units[d.key] : ""
         }`;
@@ -371,18 +377,20 @@ function AirQualityTimeSeriesChart({
         }
         tooltip.attr(
           "transform",
-          `translate(${Math.min(mouseX + 10, width - 150)}, 30)`
+          `translate(${Math.min(mouseX + 10, width - (isMobile ? 100 : 150))}, 30)`
         );
       });
   }, [timeSeriesData, stateName]);
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="text-sm text-gray-600 mb-4 text-center">
+      <div className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center px-2">
         Historical trends of air quality indicators (sample data)
       </div>
-      <svg ref={svgRef} />
-      <div className="mt-4 text-xs text-gray-500 text-center">
+      <div className="w-full overflow-x-auto">
+        <svg ref={svgRef} style={{ minWidth: "360px" }} />
+      </div>
+      <div className="mt-3 sm:mt-4 text-xs text-gray-500 text-center px-2">
         Hover over the chart to see detailed values
       </div>
     </div>
@@ -590,7 +598,7 @@ export default function ModalAirQuality({ onClose }: Props) {
     const mapBox = root
       .append("div")
       .style("width", "100%")
-      .style("height", "clamp(300px, 55vh, 640px)")
+      .style("height", "clamp(250px, 45vh, 580px)")
       .style("background", "transparent")
       .style("position", "relative")
       .node() as HTMLDivElement;
@@ -861,25 +869,26 @@ export default function ModalAirQuality({ onClose }: Props) {
       style={{
         background: "rgba(15, 23, 42, 0.4)",
         overflowY: "auto",
-        padding: "20px",
+        padding: "8px",
       }}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className="relative mx-auto w-[96vw] max-w-6xl rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-5 duration-500"
+        className="relative mx-auto w-full max-w-6xl rounded-2xl shadow-2xl border animate-in slide-in-from-bottom-5 duration-500"
         style={{
           background:
             "linear-gradient(to bottom right, rgb(250, 245, 255), rgb(237, 233, 254))",
           borderColor: PURPLE_LIGHT,
-          maxHeight: "90vh",
+          maxHeight: "calc(100vh - 16px)",
           display: "flex",
           flexDirection: "column",
+          minHeight: "calc(100vh - 16px)",
         }}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 py-4 animate-in slide-in-from-top-3 duration-700 delay-100"
+          className="flex flex-row items-start sm:items-center justify-between px-3 sm:px-6 py-3 sm:py-4 animate-in slide-in-from-top-3 duration-700 delay-100 gap-3 sm:gap-0"
           style={{
             borderBottom: `1px solid ${PURPLE_LIGHT}`,
             position: "sticky",
@@ -890,15 +899,15 @@ export default function ModalAirQuality({ onClose }: Props) {
             borderRadius: "16px 16px 0 0",
           }}
         >
-          <div className="flex items-center gap-4">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <IconMapPin className="w-6 h-6 text-purple-600" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg">
+              <IconMapPin className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
             </div>
-            <div>
-              <h1 className="font-semibold text-xl text-slate-900">
+            <div className="">
+              <h1 className="font-semibold text-lg sm:text-xl text-slate-900">
                 Air Quality Explorer
               </h1>
-              <p className="text-sm text-slate-600">
+              <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">
                 Discover air quality insights with personalized AI
                 recommendations
               </p>
@@ -906,43 +915,43 @@ export default function ModalAirQuality({ onClose }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="cursor-pointer inline-flex items-center px-4 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-slate-600 border-slate-300 hover:border-slate-400 hover:bg-slate-50"
+            className="bg-white cursor-pointer inline-flex items-center px-3 sm:px-4 py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 text-slate-600 border-slate-300 hover:border-slate-400 hover:bg-slate-50 self-end sm:self-auto"
             aria-label="Close modal"
           >
-            <IconX className="w-4 h-4 mr-2" />
-            Close
+            <IconX className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Close</span>
           </button>
         </div>
 
         {/* Body (scrollable) */}
-        <div className="p-6 space-y-6 overflow-y-auto">
+        <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 overflow-y-auto flex-1">
           {/* Query row */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 animate-in slide-in-from-left-5 duration-700 delay-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <IconMapPin className="w-5 h-5 text-blue-600" />
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 animate-in slide-in-from-left-5 duration-700 delay-200">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
+                <IconMapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="font-semibold text-xl text-slate-900">
+                <h2 className="font-semibold text-lg sm:text-xl text-slate-900">
                   Location & Time Settings
                 </h2>
-                <p className="text-sm text-slate-600">
+                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">
                   Choose your location and date to get accurate air quality data
                 </p>
               </div>
             </div>
 
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-4 w-full">
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                 <div className="flex flex-col flex-1">
-                  <label className="text-sm font-medium mb-2 text-slate-700 flex items-center gap-2">
-                    <IconBuilding className="w-4 h-4" />
+                  <label className="text-xs sm:text-sm font-medium mb-2 text-slate-700 flex items-center gap-2">
+                    <IconBuilding className="w-3 h-3 sm:w-4 sm:h-4" />
                     State
                   </label>
                   <select
                     value={selectedFips}
                     onChange={(e) => setSelectedFips(e.target.value)}
-                    className="w-full px-3 py-3 rounded-lg border text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
+                    className="w-full px-3 py-2.5 sm:py-3 rounded-lg border text-xs sm:text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
                   >
                     <option value="">Select a state...</option>
                     {statesList.map((s) => (
@@ -954,23 +963,23 @@ export default function ModalAirQuality({ onClose }: Props) {
                 </div>
 
                 <div className="flex flex-col flex-1">
-                  <label className="text-sm font-medium mb-2 text-slate-700 flex items-center gap-2">
-                    <IconCalendar className="w-4 h-4" />
+                  <label className="text-xs sm:text-sm font-medium mb-2 text-slate-700 flex items-center gap-2">
+                    <IconCalendar className="w-3 h-3 sm:w-4 sm:h-4" />
                     Date
                   </label>
                   <input
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-3 py-3 rounded-lg border text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
+                    className="w-full px-3 py-2.5 sm:py-3 rounded-lg border text-xs sm:text-sm transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 border-slate-300 text-slate-700 bg-white hover:border-slate-400"
                   />
                 </div>
               </div>
 
               <div className="flex items-center sm:items-end">
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-3">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-2.5 sm:p-3">
                   <div className="text-xs leading-relaxed text-slate-700 flex items-start gap-2">
-                    <IconBulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <IconBulb className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <strong>Tip:</strong> Select a state to automatically zoom
                       into it on the map below. The visualization will smoothly
@@ -983,46 +992,49 @@ export default function ModalAirQuality({ onClose }: Props) {
           </div>
 
           {/* Map + (always horizontal) legend */}
-          <div className="grid gap-4 md:grid-cols-[1fr] animate-in slide-in-from-right-5 duration-700 delay-300">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-[1fr] animate-in slide-in-from-right-5 duration-700 delay-300">
             <div
               ref={wrapRef}
-              className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 overflow-visible pb-3"
+              className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 overflow-hidden pb-2 sm:pb-3"
+              style={{ minHeight: "280px" }}
             />
             <div></div>
           </div>
 
           {/* Chart section with toggle */}
           {selectedStateData && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 animate-in slide-in-from-left-5 duration-700 delay-400">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <IconChartLine className="w-5 h-5 text-green-600" />
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 animate-in slide-in-from-left-5 duration-700 delay-400">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3 sm:gap-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
+                    <IconChartLine className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
-                  <div className="font-semibold text-xl text-slate-900">
+                  <div className="font-semibold text-lg sm:text-xl text-slate-900">
                     Air Quality Trends for {selectedStateName}
                   </div>
                 </div>
                 <button
                   onClick={() => setShowChart((v) => !v)}
-                  className="inline-flex items-center px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50"
+                  className="inline-flex items-center px-3 py-2 rounded-lg border text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 bg-white text-purple-600 border-purple-300 hover:border-purple-500 hover:bg-purple-50 self-end sm:self-auto"
                 >
                   {showChart ? (
                     <>
-                      <IconEyeOff className="w-4 h-4 mr-2" />
-                      Hide chart
+                      <IconEyeOff className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      <span className="hidden sm:inline">Hide chart</span>
+                      <span className="sm:hidden">Hide</span>
                     </>
                   ) : (
                     <>
-                      <IconEye className="w-4 h-4 mr-2" />
-                      Show chart
+                      <IconEye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                      <span className="hidden sm:inline">Show chart</span>
+                      <span className="sm:hidden">Show</span>
                     </>
                   )}
                 </button>
               </div>
 
               {showChart && (
-                <div className="animate-in slide-in-from-bottom-3 duration-500">
+                <div className="animate-in slide-in-from-bottom-3 duration-500 overflow-x-auto">
                   <AirQualityTimeSeriesChart
                     stateData={selectedStateData}
                     stateName={selectedStateName}
@@ -1033,35 +1045,35 @@ export default function ModalAirQuality({ onClose }: Props) {
           )}
 
           {/* Tags selection */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-6 space-y-6 animate-in slide-in-from-bottom-5 duration-700 delay-500">
-            <div className="flex items-center justify-between">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 space-y-4 sm:space-y-6 animate-in slide-in-from-bottom-5 duration-700 delay-500">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">
                   Personalize Your Recommendations
                 </h3>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="text-xs sm:text-sm text-slate-600 mt-1">
                   Select your interests and health considerations for tailored
                   air quality advice
                 </p>
               </div>
-              <div className="text-xs text-slate-500 bg-slate-50 px-3 py-1 rounded-full">
+              <div className="text-xs text-slate-500 bg-slate-50 px-2 sm:px-3 py-1 rounded-full self-end sm:self-auto">
                 {selectedTagIds.length} selected
               </div>
             </div>
 
             {/* User's Current Tags */}
             {user && userTags.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2">
-                  <IconUser className="w-4 h-4 text-slate-600" />
-                  <h4 className="text-sm font-semibold text-slate-700">
+                  <IconUser className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-700">
                     Your Current Interests
                   </h4>
                   <span className="text-xs text-slate-500 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
                     From your profile
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {userTags.map((tag) => (
                     <Chip
                       key={`user-${tag.tagId}`}
@@ -1081,10 +1093,10 @@ export default function ModalAirQuality({ onClose }: Props) {
 
             {/* Show message for non-logged users */}
             {!user && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <IconUser className="w-4 h-4 text-blue-600" />
-                  <h4 className="text-sm font-semibold text-blue-700">
+                  <IconUser className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />
+                  <h4 className="text-xs sm:text-sm font-semibold text-blue-700">
                     Sign In for Personalized Recommendations
                   </h4>
                 </div>
@@ -1098,10 +1110,10 @@ export default function ModalAirQuality({ onClose }: Props) {
             {Object.entries(tagsByCategory).map(([category, tags]) => (
               <div
                 key={category}
-                className="space-y-3 animate-in slide-in-from-left-3 duration-500"
+                className="space-y-2 sm:space-y-3 animate-in slide-in-from-left-3 duration-500"
               >
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-slate-700">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0">
+                  <h4 className="text-xs sm:text-sm font-semibold text-slate-700">
                     {category}
                   </h4>
                   <span className="text-xs text-slate-500">
@@ -1109,7 +1121,7 @@ export default function ModalAirQuality({ onClose }: Props) {
                     {tags.length} selected
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {tags.length > 0 ? (
                     tags.map((tag) => (
                       <Chip
@@ -1133,13 +1145,13 @@ export default function ModalAirQuality({ onClose }: Props) {
               </div>
             ))}
 
-            <div className="pt-4 border-t border-slate-200 space-y-4">
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <IconRobot className="w-5 h-5 text-purple-600" />
+            <div className="pt-3 sm:pt-4 border-t border-slate-200 space-y-3 sm:space-y-4">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-purple-100 rounded-lg">
+                    <IconRobot className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h5 className="text-sm font-semibold text-slate-900 mb-1">
                       Ready for AI Recommendations?
                     </h5>
@@ -1150,16 +1162,16 @@ export default function ModalAirQuality({ onClose }: Props) {
                     <button
                       onClick={() => null}
                       disabled={geminiLoading || !selectedFips}
-                      className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0 shadow-md hover:shadow-lg"
+                      className="inline-flex items-center px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 hover:scale-105 transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none bg-gradient-to-r from-purple-600 to-blue-600 text-white border-0 shadow-md hover:shadow-lg w-full sm:w-auto justify-center"
                     >
                       {geminiLoading ? (
                         <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent mr-2"></div>
                           Analyzing...
                         </>
                       ) : (
                         <>
-                          <IconSparkles className="w-4 h-4 mr-2" />
+                          <IconSparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                           Get AI Recommendations
                         </>
                       )}
@@ -1280,16 +1292,16 @@ export default function ModalAirQuality({ onClose }: Props) {
             )}
           </div>
 
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 animate-in slide-in-from-bottom-3 duration-700 delay-700">
-            <div className="flex items-start gap-4">
-              <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
-                <IconAlertTriangle className="w-5 h-5 text-amber-600" />
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-6 animate-in slide-in-from-bottom-3 duration-700 delay-700">
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="p-1.5 sm:p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                <IconAlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
               </div>
               <div>
                 <h4 className="font-semibold text-amber-900 mb-2">
                   Important Information
                 </h4>
-                <div className="text-sm text-amber-800 space-y-2">
+                <div className="text-xs sm:text-sm text-amber-800 space-y-2">
                   <p>
                     <strong>AI Recommendations:</strong> Personalized advice is
                     generated based on your selected interests, health
