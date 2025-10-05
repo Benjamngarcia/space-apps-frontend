@@ -53,5 +53,10 @@
     { "fips": "55", "name": "Wisconsin",      "NO2": 27, "O3": 49, "PM": 46, "CH2O": 17 },
     { "fips": "56", "name": "Wyoming",        "NO2": 15, "O3": 40, "PM": 38, "CH2O": 12 },
     { "fips": "72", "name": "Puerto Rico",    "NO2": 24, "O3": 57, "PM": 55, "CH2O": 18 }
-  ]
+  ],
+   "tags": [
+        "Running,Outdoor Activities",
+        "Elderly,Vulnerability and Health",
+        "Pet Owner,Occupation and Lifestyle"
+    ]
 }
