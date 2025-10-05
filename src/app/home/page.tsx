@@ -58,7 +58,21 @@ export default function Home() {
 
           <div className="grid grid-cols-1 gap-4 sm:gap-6 mb-8 sm:mb-12 animate-in slide-in-from-bottom-5 duration-700 delay-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm ring-1 ring-slate-200 p-4 sm:p-6 transform transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1 group">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-900">
+                  United States Air Quality Map
+                </h3>
+                <div className="flex items-center gap-2">
+                  <IconMapPin className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs text-slate-500 bg-purple-50 px-2 py-1 rounded border border-purple-200">
+                    Real-time data
+                  </span>
+                </div>
+              </div>
               <StaticUSChoropleth height="100%" />
+              <p className="text-xs text-slate-600 mt-3 text-center">
+                Interactive map showing air quality concentration levels across all US states. Click states for detailed analysis.
+              </p>
             </div>
           </div>
 

@@ -75,6 +75,10 @@ class AuthService {
     return apiService.get<TagsByTypeResponse>('/auth/tags/by-type');
   }
 
+  async getS3Data(): Promise<any> {
+    return apiService.get<any>('/files/map-data');
+  }
+
   isAuthenticated(): boolean {
     return !!apiService.getAccessToken();
   }
