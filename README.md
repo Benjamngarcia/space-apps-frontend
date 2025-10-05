@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aeros - Air Quality Intelligence Platform
 
-## Getting Started
+Aeros is a web platform developed for the NASA Space Apps Challenge 2025, focused on monitoring and visualizing real-time air quality across the United States. Our goal is to empower people to make informed decisions about their health and daily activities, using open data, artificial intelligence, and a friendly user experience.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Interactive map:** Visualize air quality by state and zip code, with updated data categorized by pollutant (NO2, O3, CH2O, PM).
+- **Personalized recommendations:** Receive suggestions for safe activities, indoor alternatives, and alerts, tailored to your interests and health conditions.
+- **User profile:** Manage your account, set notifications and preferences to receive relevant information.
+- **Intelligent analysis:** Our AI processes historical and current data to provide insights and predictions about air quality.
+- **Multiplatform access:** Available on any device, with a modern and responsive interface.
+- **Robust backend:** Node.js API integrated with AWS S3 for efficient data and CSV file management.
+- **Next.js frontend:** Fast and scalable application, with dynamic visualizations and reusable components.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚦 Live Demo
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Test the app here: [https://space-apps-frontend-cyan.vercel.app/](https://space-apps-frontend-cyan.vercel.app/)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏆 Challenge
 
-## Learn More
+NASA’s Tropospheric Emissions: Monitoring of Pollution (TEMPO) mission is revolutionizing air quality monitoring across North America by enabling better forecasts and reducing pollutant exposure. Your challenge is to develop a web-based app that forecasts air quality by integrating real-time TEMPO data with ground-based air quality measurements and weather data, notifying users of poor air quality, and helping to improve public health decisions. Teams are encouraged to utilize new technologies that allow seamless scaling of computing from local devices to cloud systems, enhancing collaboration and streamlining work efficiency.
 
-To learn more about Next.js, take a look at the following resources:
+## 👨‍💻 Team
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Team: [Dictamigos](https://dictamigos.com)**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Benjamín García - Fullstack Developer
+- Ian Aguirre - Data Minner
+- Hagen Guerrero - Backend Developer
+- Jesse Lopez - Machine Learning Engineer
+- Emiliano Ruiz - Frontend Developer
+- Santiago Gonzalez - Data Engineer
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📦 Tech Stack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Frontend:** Next.js, React, Tailwind CSS, Mapbox
+- **Backend:** Node.js, Express, AWS S3, csv-parse
+- **AI & Data:** Recommendation algorithms, environmental data processing
+
+## 🛠️ Getting Started
+
+1. Clone the repository.
+2. Install dependencies in both frontend and backend.
+3. Run both servers:
+    - Frontend: `npm run dev` in `/space-apps-frontend`
+    - Backend: `npm run dev` in `/space-apps-backend`
+4. Go to [http://localhost:3000](http://localhost:3000) to explore the app.
+
+## 📄 License
+
+MIT
+
+---
+
+Thank you for visiting Aeros! Your health and wellbeing, powered by data and technology.
