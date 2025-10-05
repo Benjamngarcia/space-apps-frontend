@@ -4,6 +4,9 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { authService } from '../../services/auth';
+import { TagsByType } from '../../types/auth';
+import { Chip } from '../../components/Chip';
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -15,6 +18,9 @@ export default function Register() {
     birthdate: '',
     zipCode: '',
   });
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [tagsByType, setTagsByType] = useState<TagsByType>({});
+  const [tagsLoading, setTagsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -26,6 +32,24 @@ export default function Register() {
       router.push('/home');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  const fetchTags = async () => {
+    try {
+      setTagsLoading(true);
+      const response = await authService.getTagsByType();
+      if (response.success) {
+        setTagsByType(response.data.tagsByType);
+      }
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    } finally {
+      setTagsLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -49,6 +73,14 @@ export default function Register() {
     });
   };
 
+  const toggleTag = (tagId: number) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -67,7 +99,10 @@ export default function Register() {
 
     try {
       const { confirmPassword, ...registrationData } = formData;
-      await register(registrationData);
+      await register({
+        ...registrationData,
+        tagIds: selectedTags
+      });
       router.push('/home');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
@@ -97,7 +132,7 @@ export default function Register() {
             </h2>
             <p className="text-slate-600 transition-all duration-300">
               Already have an account?{' '}
-              <Link href="/login" className="tfont-medium text-purple-600 hover:text-purple-700 transition-all duration-200 hover:underline">
+              <Link href="/login" className="font-medium text-purple-600 hover:text-purple-700 transition-all duration-200 hover:underline">
                 Sign in here
               </Link>
             </p>
@@ -114,7 +149,7 @@ export default function Register() {
                   name="name"
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 placeholder-slate-400 hover:border-slate-400 text-gray-600"
                   placeholder="John"
                   value={formData.name}
                   onChange={handleChange}
@@ -129,7 +164,7 @@ export default function Register() {
                   name="surname"
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-slate-400 text-gray-600"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder-slate-400 text-gray-600"
                   placeholder="Doe"
                   value={formData.surname}
                   onChange={handleChange}
@@ -147,7 +182,7 @@ export default function Register() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-slate-400 text-gray-600"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder-slate-400 text-gray-600"
                 placeholder="john@example.com"
                 value={formData.email}
                 onChange={handleChange}
@@ -164,7 +199,7 @@ export default function Register() {
                   name="birthdate"
                   type="date"
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-gray-600"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-gray-600"
                   value={formData.birthdate}
                   onChange={handleChange}
                 />
@@ -178,7 +213,7 @@ export default function Register() {
                   name="zipCode"
                   type="text"
                   required
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-slate-400 text-gray-600"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder-slate-400 text-gray-600"
                   placeholder="12345"
                   value={formData.zipCode}
                   onChange={handleChange}
@@ -196,7 +231,7 @@ export default function Register() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-slate-400 text-gray-600"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder-slate-400 text-gray-600"
                 placeholder="Create a strong password"
                 value={formData.userPss}
                 onChange={handleChange}
@@ -213,11 +248,63 @@ export default function Register() {
                 type="password"
                 autoComplete="new-password"
                 required
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-slate-400 text-gray-600"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors placeholder-slate-400 text-gray-600"
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />
+            </div>
+
+            {/* Tags Selection */}
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-medium text-slate-900 mb-2">
+                  Select Your Interests
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Help us personalize your air quality recommendations by selecting relevant tags
+                </p>
+              </div>
+
+              {tagsLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-200 border-t-purple-600 mx-auto mb-2"></div>
+                  <p className="text-slate-600 text-sm">Loading interests...</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(tagsByType).map(([category, tags]) => (
+                    <div key={category} className="space-y-3">
+                      <h4 className="font-medium text-slate-800 text-sm uppercase tracking-wide">
+                        {category}
+                      </h4>
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((tag) => (
+                          <Chip
+                            key={tag.tagId}
+                            tagId={tag.tagId}
+                            tagName={tag.tagName}
+                            tagType={category}
+                            isSelected={selectedTags.includes(tag.tagId)}
+                            isClickable={true}
+                            onClick={toggleTag}
+                            size="md"
+                            variant="default"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedTags.length > 0 && (
+                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <p className="text-sm text-purple-800">
+                    <span className="font-medium">{selectedTags.length}</span> interest{selectedTags.length !== 1 ? 's' : ''} selected
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -234,7 +321,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-purple-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -247,7 +334,7 @@ export default function Register() {
             </button>
 
             <div className="text-center pt-4">
-              <Link href="/" className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">
+              <Link href="/" className="text-sm font-medium text-slate-600 hover:text-purple-600 transition-colors">
                 ← Back to home
               </Link>
             </div>

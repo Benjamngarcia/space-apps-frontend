@@ -5,6 +5,7 @@ import { Header } from "../../components/Header";
 import { useUser } from "../../contexts/UserContext";
 import Link from "next/link";
 import { IconBell, IconMapPin } from "@tabler/icons-react";
+import { Chip } from "../../components/Chip";
 
 export default function Profile() {
   const { user } = useUser();
@@ -173,46 +174,39 @@ export default function Profile() {
                 </div>
 
                 <div className="group">
-                  <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-2 transition-colors duration-200 group-hover:text-blue-600">
-                    Topics
+                  <label className="block text-xs sm:text-sm font-medium text-slate-600 mb-2 transition-colors duration-200 group-hover:text-purple-600">
+                    Your Interests
                   </label>
-                  <div className="space-y-2">
-                    <div className="flex items-center bg-blue-50 border border-blue-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 transition-all duration-200 hover:bg-blue-100 hover:shadow-sm transform hover:scale-[1.02]">
-                      <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 mr-2 transition-transform duration-200 hover:scale-110"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-blue-800 font-medium text-xs sm:text-sm">
-                        Cardiovascular Problems
-                      </span>
-                    </div>
-                    <div className="flex items-center bg-cyan-50 border border-cyan-200 rounded-lg px-3 sm:px-4 py-2 sm:py-3 transition-all duration-200 hover:bg-cyan-100 hover:shadow-sm transform hover:scale-[1.02]">
-                      <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-600 mr-2 transition-transform duration-200 hover:scale-110"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-cyan-800 font-medium text-xs sm:text-sm">
-                        Running
-                      </span>
-                    </div>
+                  <div className="space-y-3">
+                    {user?.tags && user.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {user.tags.map((tag) => (
+                          <Chip
+                            key={tag.tagId}
+                            tagId={tag.tagId}
+                            tagName={tag.tagName}
+                            tagType={tag.tagType}
+                            isSelected={true}
+                            isClickable={false}
+                            size="sm"
+                            variant="filled"
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50 border border-slate-200 rounded-lg px-3 sm:px-4 py-6 text-center transition-all duration-200 hover:bg-slate-100">
+                        <div className="text-slate-400 mb-2">
+                          <IconBell className="w-8 h-8 mx-auto" stroke={1} />
+                        </div>
+                        <p className="text-slate-600 text-sm mb-2">No interests selected yet</p>
+                        <Link 
+                          href="/register"
+                          className="text-purple-600 hover:text-purple-700 text-sm font-medium transition-colors"
+                        >
+                          Add your interests →
+                        </Link>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
